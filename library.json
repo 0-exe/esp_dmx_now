@@ -1,7 +1,7 @@
 {
   "name": "esp_dmx",
   "version": "4.1.0",
-  "description": "This library allows for transmitting and receiving ANSI-ESTA E1.11 DMX-512A and ANSI-ESTA E1.20 RDM using an Espressif ESP32. It provides control and analysis of the packet configuration and allows the user to read or write synchronously or asynchronously from the DMX bus using whichever hardware UART port that is desired. This library also includes tools for data error-checking to safely process DMX and RDM commands as well as DMX packet metadata extraction to assist with troubleshooting errors.",
+  "description": "Diese Bibliothek ermöglicht das Senden und Empfangen von ANSI-ESTA E1.11 DMX-512A und ANSI-ESTA E1.20 RDM mit einem Espressif ESP32. Sie bietet Kontrolle und Analyse der Paketkonfiguration und erlaubt synchrones oder asynchrones Lesen und Schreiben auf dem DMX-Bus über den gewünschten Hardware-UART-Port. Zusätzlich enthält sie Werkzeuge zur Fehlerprüfung und zur Extraktion von DMX-Paket-Metadaten für eine einfachere Fehlersuche.",
   "keywords": "esp32, espressif32, DMX, DMX512, DMX512-A, RDM, lighting, theater, theatre, espdmx, esp dmx",
   "repository":
   {

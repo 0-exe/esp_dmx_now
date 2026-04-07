@@ -1,8 +1,8 @@
 # esp_dmx
 
-This library allows for transmitting and receiving ANSI-ESTA E1.11 DMX-512A and ANSI-ESTA E1.20 RDM using an Espressif ESP32. It provides control and analysis of the packet configuration and allows the user to read or write synchronously or asynchronously from the DMX bus using whichever hardware UART port that is desired. This library also includes tools for data error-checking to safely process DMX and RDM commands as well as DMX packet metadata extraction to assist with troubleshooting errors.
+Diese Bibliothek ermöglicht das Senden und Empfangen von ANSI-ESTA E1.11 DMX-512A und ANSI-ESTA E1.20 RDM mit einem Espressif ESP32. Sie bietet Kontrolle und Analyse der Paketkonfiguration und erlaubt synchrones oder asynchrones Lesen und Schreiben auf dem DMX-Bus über den gewünschten Hardware-UART-Port. Zusätzlich enthält sie Werkzeuge zur Fehlerprüfung und zur Extraktion von DMX-Paket-Metadaten für eine einfachere Fehlersuche.
 
-## Contents
+## Inhalte
 
 - [Library Installation](#library-installation)
   - [Arduino](#arduino)
@@ -913,99 +913,99 @@ ANSI-ESTA E1.11 DMX512-A specifies that DMX devices be electrically isolated fro
 
 ## Wireless DMX Build Guide
 
-This guide describes how to build a **wireless DMX sender/receiver** using two ESP32 dev boards and two DollaTek 5V MAX485 TTL-to-RS485 modules with XLR-3 connectors.
+Diese Anleitung zeigt Schritt für Schritt, wie du ein **kabelloses DMX-Sender/Empfänger-System** mit zwei ESP32-Boards und zwei DollaTek-5V-MAX485-TTL-zu-RS485-Modulen aufbaust.
 
-This is a **non-isolated** hobby build (good for learning and short cable runs). For stage/production use, add galvanic isolation — see [Isolation Note](#isolation-note).
+Der Aufbau ist **nicht galvanisch getrennt** und damit für Lernen, Tests und kurze Leitungen gedacht. Für Bühne/Veranstaltung nutze bitte die Hinweise unter [Isolation Note](#isolation-note).
 
 ### Hardware
 
-| Qty | Item |
+| Anzahl | Bauteil |
 |-----|------|
-| 2 | ESP32 development board |
-| 2 | DollaTek 5V MAX485 TTL-to-RS485 module |
-| 2 | XLR-3 connector (one female for DMX IN, one male for DMX OUT) |
-| 1 | 1.8 kΩ resistor (level-shift divider, sender only) |
-| 1 | 3.3 kΩ resistor (level-shift divider, sender only) |
-| 2 | 0.1 µF ceramic capacitor |
-| 2 | 10 µF electrolytic capacitor |
-| 1 | 120 Ω resistor (termination, receiver) |
+| 2 | ESP32-Entwicklungsboard |
+| 2 | DollaTek 5V MAX485 TTL-zu-RS485 Modul |
+| 2 | XLR-3 Steckverbinder (1x female für DMX IN, 1x male für DMX OUT) |
+| 1 | 1.8 kΩ Widerstand (nur Sender, Spannungsteiler) |
+| 1 | 3.3 kΩ Widerstand (nur Sender, Spannungsteiler) |
+| 2 | 0.1 µF Keramikkondensator |
+| 2 | 10 µF Elektrolytkondensator |
+| 1 | 120 Ω Widerstand (Abschluss, Empfänger) |
 
 ### ESP32 Pins
 
-Use **UART2** on both boards:
+Auf beiden Boards wird **UART2** genutzt:
 
-| ESP32 label | GPIO | Purpose |
+| ESP32-Label | GPIO | Zweck |
 |-------------|------|---------|
-| `RX2` | GPIO16 | UART2 receive |
-| `TX2` | GPIO17 | UART2 transmit |
-| `VIN` | — | 5 V supply out |
-| `3V3` | — | 3.3 V supply out |
-| `GND` | — | Ground |
+| `RX2` | GPIO16 | UART2 Empfang |
+| `TX2` | GPIO17 | UART2 Senden |
+| `VIN` | — | 5 V Versorgung ausgeben |
+| `3V3` | — | 3.3 V Versorgung ausgeben |
+| `GND` | — | Masse |
 
 ### MAX485 Module Pins
 
-The TTL header (top-to-bottom) on the DollaTek board:
+TTL-Stiftleiste (von oben nach unten) am DollaTek-Board:
 
-| Pin | Name | Direction |
+| Pin | Name | Funktion |
 |-----|------|-----------|
-| 1 | VCC | Power in (5 V) |
-| 2 | GND | Ground |
-| 3 | DI | Driver input (TTL TX → RS-485) |
-| 4 | DE | Driver enable (active high) |
-| 5 | RE | Receiver enable (active low) |
-| 6 | RO | Receiver output (RS-485 → TTL RX) |
+| 1 | VCC | Versorgung (5 V) |
+| 2 | GND | Masse |
+| 3 | DI | Treiber-Eingang (TTL TX → RS-485) |
+| 4 | DE | Treiber aktivieren (aktiv high) |
+| 5 | RE | Empfänger aktivieren (aktiv low) |
+| 6 | RO | Empfänger-Ausgang (RS-485 → TTL RX) |
 
-The green screw terminal is the RS-485 bus: **A** and **B**.
+Die grüne Schraubklemme ist der RS-485-Bus mit **A** und **B**.
 
-> A/B labelling can be inconsistent between vendors. If DMX does not work, swap A and B.
+> Die A/B-Beschriftung ist je nach Hersteller unterschiedlich. Wenn nichts funktioniert, A und B tauschen.
 
 ### XLR-3 Pinout
 
-| XLR-3 pin | Signal |
+| XLR-3 Pin | Signal |
 |-----------|--------|
-| 1 | Shield / Signal ground |
+| 1 | Schirm / Signalmasse |
 | 2 | Data− (DMX−) |
 | 3 | Data+ (DMX+) |
 
 ### Sender Box — DMX IN to Wireless
 
-This box **receives DMX** from a console via a female XLR-3 input, converts it with the MAX485 in **receive mode**, and feeds the data to the ESP32.
+Der Sender liest DMX über eine XLR-3-Buchse ein, setzt den MAX485 auf **Empfang**, und übergibt die Daten an den ESP32.
 
-#### Complete sender wiring map (pin-by-pin)
+#### Komplette Sender-Verdrahtung (Pin für Pin)
 
-| Sender side | Connect to |
+| Sender-Seite | Verbinden mit |
 |-------------|------------|
 | ESP32 `VIN` | MAX485 `VCC` |
 | ESP32 `GND` | MAX485 `GND` |
-| ESP32 `RX2` (GPIO16) | Divider midpoint (between 1.8 kΩ and 3.3 kΩ) |
-| MAX485 `RO` | 1.8 kΩ resistor to divider midpoint |
-| Divider midpoint | 3.3 kΩ resistor to ESP32 `GND` |
+| ESP32 `RX2` (GPIO16) | Mittelpunkt des Teilers (zwischen 1.8 kΩ und 3.3 kΩ) |
+| MAX485 `RO` | 1.8 kΩ Widerstand zum Teiler-Mittelpunkt |
+| Teiler-Mittelpunkt | 3.3 kΩ Widerstand zu ESP32 `GND` |
 | MAX485 `DE` | ESP32 `GND` |
 | MAX485 `RE` | ESP32 `GND` |
-| XLR female pin 1 | ESP32 `GND` and MAX485 bus ground |
-| XLR female pin 2 (Data−) | MAX485 `B` |
-| XLR female pin 3 (Data+) | MAX485 `A` |
+| XLR female Pin 1 | ESP32 `GND` und MAX485 Bus-Masse |
+| XLR female Pin 2 (Data−) | MAX485 `B` |
+| XLR female Pin 3 (Data+) | MAX485 `A` |
 
-#### UART settings (DMX512)
+#### UART-Einstellungen (DMX512)
 
-| Parameter | Value |
+| Parameter | Wert |
 |-----------|-------|
-| Baud rate | 250 000 |
-| Data bits | 8 |
-| Parity | None |
-| Stop bits | 2 |
+| Baudrate | 250 000 |
+| Datenbits | 8 |
+| Parität | Keine |
+| Stoppbits | 2 |
 
-#### Power
+#### Versorgung
 - MAX485 **VCC** → ESP32 **VIN (5 V)**
 - MAX485 **GND** → ESP32 **GND**
 
-#### Mode pins (receive mode — driver disabled, receiver enabled)
+#### Modus-Pins (Empfangsmodus: Treiber aus, Empfänger an)
 - MAX485 **DE** → **GND**
 - MAX485 **RE** → **GND**
 
-#### Data — level-shift RO → RX2
+#### Datenleitung — Pegelanpassung RO → RX2
 
-The MAX485 is powered at 5 V, so its **RO** pin can output ~5 V. The ESP32 GPIO must not exceed **3.3 V**. Use a resistor divider:
+Da MAX485 mit 5 V versorgt wird, kann **RO** bis etwa 5 V ausgeben. ESP32-GPIO darf maximal **3.3 V** sehen. Daher ist ein Spannungsteiler Pflicht:
 
 ```
 MAX485 RO ---[ 1.8 kΩ ]---+--- ESP32 RX2 (GPIO16)
@@ -1018,98 +1018,98 @@ MAX485 RO ---[ 1.8 kΩ ]---+--- ESP32 RX2 (GPIO16)
 - MAX485 **RO** → 1.8 kΩ → **ESP32 RX2 (GPIO16)**
 - ESP32 **RX2 (GPIO16)** → 3.3 kΩ → **GND**
 
-Resistors are not polarized — either orientation works.
+Widerstände sind unpolarisiert, die Einbaurichtung ist egal.
 
-#### DMX IN — XLR-3 to MAX485
+#### DMX IN — XLR-3 zu MAX485
 - XLR **Pin 1** → **GND**
 - XLR **Pin 2 (Data−)** → MAX485 **B**
 - XLR **Pin 3 (Data+)** → MAX485 **A**
 
-If DMX is not received, swap A and B.
+Falls kein DMX empfangen wird: A und B tauschen.
 
 ### Receiver Box — Wireless to DMX OUT
 
-This box receives wireless frames from the sender ESP32, then drives the MAX485 in **transmit mode** to output DMX on a male XLR-3 connector.
+Der Empfänger bekommt Funkframes vom Sender-ESP32 und gibt daraus DMX über eine XLR-3-Steckerseite aus.
 
-#### Complete receiver wiring map (pin-by-pin)
+#### Komplette Empfänger-Verdrahtung (Pin für Pin)
 
-| Receiver side | Connect to |
+| Empfänger-Seite | Verbinden mit |
 |---------------|------------|
 | ESP32 `VIN` | MAX485 `VCC` |
 | ESP32 `GND` | MAX485 `GND` |
 | ESP32 `TX2` (GPIO17) | MAX485 `DI` |
 | ESP32 `3V3` | MAX485 `DE` |
 | ESP32 `3V3` | MAX485 `RE` |
-| XLR male pin 1 | ESP32 `GND` and MAX485 bus ground |
-| XLR male pin 2 (Data−) | MAX485 `B` |
-| XLR male pin 3 (Data+) | MAX485 `A` |
+| XLR male Pin 1 | ESP32 `GND` und MAX485 Bus-Masse |
+| XLR male Pin 2 (Data−) | MAX485 `B` |
+| XLR male Pin 3 (Data+) | MAX485 `A` |
 
-#### UART settings
+#### UART-Einstellungen
 
-Same as sender: **250 000 8N2**.
+Wie beim Sender: **250 000 8N2**.
 
-#### Power
+#### Versorgung
 - MAX485 **VCC** → ESP32 **VIN (5 V)**
 - MAX485 **GND** → ESP32 **GND**
 
-#### Mode pins (transmit mode — driver enabled, receiver disabled)
+#### Modus-Pins (Sendemodus: Treiber an, Empfänger aus)
 - MAX485 **DE** → ESP32 **3V3**
 - MAX485 **RE** → ESP32 **3V3**
 
-You can tie **DE and RE together** and run a single wire to **3V3**.
+Du kannst **DE** und **RE** verbinden und gemeinsam auf **3V3** legen.
 
-#### Data
+#### Datenleitung
 - ESP32 **TX2 (GPIO17)** → MAX485 **DI**
 
-No level shifting needed here — the 3.3 V TX2 signal is safe for the MAX485 DI input.
+Keine Pegelanpassung nötig: 3.3 V von TX2 sind für MAX485 DI passend.
 
-#### DMX OUT — XLR-3 to MAX485
+#### DMX OUT — XLR-3 zu MAX485
 - XLR **Pin 1** → **GND**
 - XLR **Pin 2 (Data−)** → MAX485 **B**
 - XLR **Pin 3 (Data+)** → MAX485 **A**
 
 ### Termination, Decoupling, and Protection
 
-#### Termination resistor (recommended, receiver only)
-Add **120 Ω across A and B** at the end of the DMX line. On the receiver DMX OUT box, make this **switchable** (ON/OFF jumper or SPDT switch), because you should only terminate if this box is the **last device** on that DMX cable run.
+#### Abschlusswiderstand (empfohlen, nur Empfänger)
+Setze **120 Ω zwischen A und B** am Leitungsende. Beim DMX-OUT-Empfänger am besten schaltbar (Jumper oder Schalter), weil nur das **letzte Gerät** in der Linie terminiert werden soll.
 
-#### Decoupling capacitors (both boxes)
-Place near each MAX485 module, across **VCC** and **GND**:
+#### Entkopplungskondensatoren (beide Boxen)
+Direkt nahe am MAX485 zwischen **VCC** und **GND** platzieren:
 
-- **0.1 µF (100 nF) ceramic** capacitor: either leg to 5 V, other leg to GND
-- **10 µF electrolytic** capacitor: **+** leg to 5 V (VCC), **−** leg to GND (look for the stripe marking the negative leg)
+- **0.1 µF (100 nF) Keramik**: ein Bein an 5 V, das andere an GND
+- **10 µF Elektrolyt**: **+** an 5 V (VCC), **−** an GND (Markierung beachten)
 
-Both capacitors go **in parallel** between VCC and GND. They reduce power-supply noise and prevent resets.
+Beide Kondensatoren liegen **parallel** zwischen VCC und GND. Das reduziert Versorgungsrauschen und verhindert Resets.
 
-#### Optional series resistors
-To reduce ringing on longer cable runs, add **33–68 Ω** in series with each of the **A** and **B** lines, close to the screw terminal.
+#### Optionale Serienwiderstände
+Bei längeren Leitungen helfen **33–68 Ω** in Serie zu **A** und **B**, möglichst nahe an der Schraubklemme.
 
-#### Optional TVS diode
-For hot-plug robustness and ESD protection, add an RS-485 TVS diode array across the **A** and **B** lines.
+#### Optionale TVS-Diode
+Für bessere ESD-/Hotplug-Festigkeit kann ein RS-485-TVS-Diodenarray zwischen **A** und **B** eingesetzt werden.
 
 ### Fully Functional Wireless Code (Arduino)
 
-Use these complete examples:
+Nutze diese vollständigen Beispiele:
 
-- **Transmitter (DMX IN → ESP-NOW):**  
+- **Sender (DMX IN → ESP-NOW):**  
   [`examples/Arduino_WirelessDMXSender/Arduino_WirelessDMXSender.ino`](examples/Arduino_WirelessDMXSender/Arduino_WirelessDMXSender.ino)
-- **Receiver (ESP-NOW → DMX OUT):**  
+- **Empfänger (ESP-NOW → DMX OUT):**  
   [`examples/Arduino_WirelessDMXReceiver/Arduino_WirelessDMXReceiver.ino`](examples/Arduino_WirelessDMXReceiver/Arduino_WirelessDMXReceiver.ino)
 
-Setup notes:
-- Set both sketches to the same `ESPNOW_CHANNEL`.
-- Copy the receiver board MAC address into `RECEIVER_MAC` in the sender sketch.
-- Keep UART wiring at **250000 8N2** as described above.
-- Upload the receiver sketch first, then the sender.
+Wichtige Setup-Hinweise:
+- Beide Sketches müssen denselben `ESPNOW_CHANNEL` verwenden.
+- Die MAC-Adresse des Empfänger-Boards in `RECEIVER_MAC` im Sender-Sketch eintragen.
+- UART-Verdrahtung auf **250000 8N2** belassen.
+- Erst Empfänger-Sketch, dann Sender-Sketch flashen.
 
 ### Isolation Note
 
-Electrical insulating tape prevents short circuits but **is not galvanic isolation**. ANSI-ESTA E1.11 DMX512-A requires devices to be electrically isolated from the DMX bus.
+Isolierband schützt vor Kurzschluss, ist aber **keine galvanische Isolation**. ANSI-ESTA E1.11 DMX512-A fordert eine galvanische Trennung zum DMX-Bus.
 
-For stage/production use, add:
-- A digital isolator (e.g. ISO7221) or optocouplers on the UART lines, **and**
-- An isolated DC-DC converter for the RS-485 side, **or**
-- Use an all-in-one isolated RS-485 transceiver module.
+Für Bühne/Produktion:
+- Digitalisolator (z. B. ISO7221) oder Optokoppler auf den UART-Leitungen, **und**
+- Isolierter DC-DC-Wandler für die RS-485-Seite, **oder**
+- Ein vollständig isoliertes RS-485-Transceiver-Modul verwenden.
 
 ## To Do
 
