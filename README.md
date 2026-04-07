@@ -49,6 +49,7 @@ This library allows for transmitting and receiving ANSI-ESTA E1.11 DMX-512A and 
   - [Sender Box — DMX IN to Wireless](#sender-box--dmx-in-to-wireless)
   - [Receiver Box — Wireless to DMX OUT](#receiver-box--wireless-to-dmx-out)
   - [Termination, Decoupling, and Protection](#termination-decoupling-and-protection)
+  - [Fully Functional Wireless Code (Arduino)](#fully-functional-wireless-code-arduino)
   - [Isolation Note](#isolation-note)
 - [To Do](#to-do)
 - [Appendix](#appendix)
@@ -897,9 +898,7 @@ DMX is transmitted over RS-485. RS-485 uses twisted-pair, half-duplex, different
 
 RS-485 transceivers typically have four data input pins: `RO`, `DI`, `DE`, and `/RE`. `RO` is receiver output. It is the pin that the UART RX pin is connected to so that data may be read from other devices to the ESP32. `DI` is driver input. It is connected to the UART TX pin so that data may be written to other devices from the ESP32. `DE` is driver input enable. Bringing this pin high enables the input on the `DI` pin. `/RE` is receiver output enable. The overline on this pin name indicates that it is active when driven low, and inactive when driven high. Driving this pin low enables the input on the `DI` pin.
 
-Because `DE` and `/RE` enable writing and reading respectively, and because `DE` is active high and `/RE` is active low, these pins are often shorted together. In this example, these pins are wired together and are controlled with one pin on the ESP32. This pin is called the enable pin. It can also be referred to as the RTS pin. The example schematic can be seen below.
-
-![An example RS-485 circuit](media/rs485-ckt.png)
+Because `DE` and `/RE` enable writing and reading respectively, and because `DE` is active high and `/RE` is active low, these pins are often shorted together. In this example, these pins are wired together and are controlled with one pin on the ESP32. This pin is called the enable pin. It can also be referred to as the RTS pin.
 
 In this example circuit, R1 and R3 are 680 ohms each. Many RS-485 breakout boards set these resistor values to 20k ohm or higher. Such high resistance values are acceptable and should still allow DMX to be written and read.
 
@@ -930,14 +929,6 @@ This is a **non-isolated** hobby build (good for learning and short cable runs).
 | 2 | 0.1 µF ceramic capacitor |
 | 2 | 10 µF electrolytic capacitor |
 | 1 | 120 Ω resistor (termination, receiver) |
-
-#### ESP32 dev board
-
-![ESP32 dev board](docs/images/esp32-board.png)
-
-#### MAX485 module
-
-![MAX485 TTL-to-RS485 module](docs/images/max485-module.png)
 
 ### ESP32 Pins
 
@@ -980,7 +971,20 @@ The green screw terminal is the RS-485 bus: **A** and **B**.
 
 This box **receives DMX** from a console via a female XLR-3 input, converts it with the MAX485 in **receive mode**, and feeds the data to the ESP32.
 
-![Sender box wiring (uploaded)](docs/images/sender-box-wiring.png)
+#### Complete sender wiring map (pin-by-pin)
+
+| Sender side | Connect to |
+|-------------|------------|
+| ESP32 `VIN` | MAX485 `VCC` |
+| ESP32 `GND` | MAX485 `GND` |
+| ESP32 `RX2` (GPIO16) | Divider midpoint (between 1.8 kΩ and 3.3 kΩ) |
+| MAX485 `RO` | 1.8 kΩ resistor to divider midpoint |
+| Divider midpoint | 3.3 kΩ resistor to ESP32 `GND` |
+| MAX485 `DE` | ESP32 `GND` |
+| MAX485 `RE` | ESP32 `GND` |
+| XLR female pin 1 | ESP32 `GND` and MAX485 bus ground |
+| XLR female pin 2 (Data−) | MAX485 `B` |
+| XLR female pin 3 (Data+) | MAX485 `A` |
 
 #### UART settings (DMX512)
 
@@ -1027,7 +1031,18 @@ If DMX is not received, swap A and B.
 
 This box receives wireless frames from the sender ESP32, then drives the MAX485 in **transmit mode** to output DMX on a male XLR-3 connector.
 
-![Receiver box wiring (uploaded)](docs/images/receiver-box-wiring.png)
+#### Complete receiver wiring map (pin-by-pin)
+
+| Receiver side | Connect to |
+|---------------|------------|
+| ESP32 `VIN` | MAX485 `VCC` |
+| ESP32 `GND` | MAX485 `GND` |
+| ESP32 `TX2` (GPIO17) | MAX485 `DI` |
+| ESP32 `3V3` | MAX485 `DE` |
+| ESP32 `3V3` | MAX485 `RE` |
+| XLR male pin 1 | ESP32 `GND` and MAX485 bus ground |
+| XLR male pin 2 (Data−) | MAX485 `B` |
+| XLR male pin 3 (Data+) | MAX485 `A` |
 
 #### UART settings
 
@@ -1071,6 +1086,21 @@ To reduce ringing on longer cable runs, add **33–68 Ω** in series with each o
 
 #### Optional TVS diode
 For hot-plug robustness and ESD protection, add an RS-485 TVS diode array across the **A** and **B** lines.
+
+### Fully Functional Wireless Code (Arduino)
+
+Use these complete examples:
+
+- **Transmitter (DMX IN → ESP-NOW):**  
+  [`examples/Arduino_WirelessDMXSender/Arduino_WirelessDMXSender.ino`](examples/Arduino_WirelessDMXSender/Arduino_WirelessDMXSender.ino)
+- **Receiver (ESP-NOW → DMX OUT):**  
+  [`examples/Arduino_WirelessDMXReceiver/Arduino_WirelessDMXReceiver.ino`](examples/Arduino_WirelessDMXReceiver/Arduino_WirelessDMXReceiver.ino)
+
+Setup notes:
+- Set both sketches to the same `ESPNOW_CHANNEL`.
+- Copy the receiver board MAC address into `RECEIVER_MAC` in the sender sketch.
+- Keep UART wiring at **250000 8N2** as described above.
+- Upload the receiver sketch first, then the sender.
 
 ### Isolation Note
 
