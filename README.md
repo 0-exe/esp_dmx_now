@@ -41,6 +41,15 @@ This library allows for transmitting and receiving ANSI-ESTA E1.11 DMX-512A and 
   - [Using Flash or Disabling Cache](#using-flash-or-disabling-cache)
   - [Wiring an RS-485 Circuit](#wiring-an-rs-485-circuit)
   - [Hardware Specifications](#hardware-specifications)
+- [Wireless DMX Build Guide](#wireless-dmx-build-guide)
+  - [Hardware](#hardware)
+  - [ESP32 Pins](#esp32-pins)
+  - [MAX485 Module Pins](#max485-module-pins)
+  - [XLR-3 Pinout](#xlr-3-pinout)
+  - [Sender Box — DMX IN to Wireless](#sender-box--dmx-in-to-wireless)
+  - [Receiver Box — Wireless to DMX OUT](#receiver-box--wireless-to-dmx-out)
+  - [Termination, Decoupling, and Protection](#termination-decoupling-and-protection)
+  - [Isolation Note](#isolation-note)
 - [To Do](#to-do)
 - [Appendix](#appendix)
   - [Command Classes](#command-classes)
@@ -901,6 +910,172 @@ Many RS-485 chips, such as the [Maxim MAX485](https://datasheets.maximintegrated
 ### Hardware Specifications
 
 ANSI-ESTA E1.11 DMX512-A specifies that DMX devices be electrically isolated from other devices on the DMX bus. In the event of a power surge, the likely worse-case scenario would mean the failure of the RS-485 circuitry and not the entire DMX device. Some DMX devices may function without isolation, but using non-isolated equipment is not recommended.
+
+
+## Wireless DMX Build Guide
+
+This guide describes how to build a **wireless DMX sender/receiver** using two ESP32 dev boards and two DollaTek 5V MAX485 TTL-to-RS485 modules with XLR-3 connectors.
+
+This is a **non-isolated** hobby build (good for learning and short cable runs). For stage/production use, add galvanic isolation — see [Isolation Note](#isolation-note).
+
+### Hardware
+
+| Qty | Item |
+|-----|------|
+| 2 | ESP32 development board |
+| 2 | DollaTek 5V MAX485 TTL-to-RS485 module |
+| 2 | XLR-3 connector (one female for DMX IN, one male for DMX OUT) |
+| 1 | 1.8 kΩ resistor (level-shift divider, sender only) |
+| 1 | 3.3 kΩ resistor (level-shift divider, sender only) |
+| 2 | 0.1 µF ceramic capacitor |
+| 2 | 10 µF electrolytic capacitor |
+| 1 | 120 Ω resistor (termination, receiver) |
+
+#### ESP32 dev board
+
+![ESP32 dev board](docs/images/esp32-board.png)
+
+#### MAX485 module
+
+![MAX485 TTL-to-RS485 module](docs/images/max485-module.png)
+
+### ESP32 Pins
+
+Use **UART2** on both boards:
+
+| ESP32 label | GPIO | Purpose |
+|-------------|------|---------|
+| `RX2` | GPIO16 | UART2 receive |
+| `TX2` | GPIO17 | UART2 transmit |
+| `VIN` | — | 5 V supply out |
+| `3V3` | — | 3.3 V supply out |
+| `GND` | — | Ground |
+
+### MAX485 Module Pins
+
+The TTL header (top-to-bottom) on the DollaTek board:
+
+| Pin | Name | Direction |
+|-----|------|-----------|
+| 1 | VCC | Power in (5 V) |
+| 2 | GND | Ground |
+| 3 | DI | Driver input (TTL TX → RS-485) |
+| 4 | DE | Driver enable (active high) |
+| 5 | RE | Receiver enable (active low) |
+| 6 | RO | Receiver output (RS-485 → TTL RX) |
+
+The green screw terminal is the RS-485 bus: **A** and **B**.
+
+> A/B labelling can be inconsistent between vendors. If DMX does not work, swap A and B.
+
+### XLR-3 Pinout
+
+| XLR-3 pin | Signal |
+|-----------|--------|
+| 1 | Shield / Signal ground |
+| 2 | Data− (DMX−) |
+| 3 | Data+ (DMX+) |
+
+### Sender Box — DMX IN to Wireless
+
+This box **receives DMX** from a console via a female XLR-3 input, converts it with the MAX485 in **receive mode**, and feeds the data to the ESP32.
+
+#### UART settings (DMX512)
+
+| Parameter | Value |
+|-----------|-------|
+| Baud rate | 250 000 |
+| Data bits | 8 |
+| Parity | None |
+| Stop bits | 2 |
+
+#### Power
+- MAX485 **VCC** → ESP32 **VIN (5 V)**
+- MAX485 **GND** → ESP32 **GND**
+
+#### Mode pins (receive mode — driver disabled, receiver enabled)
+- MAX485 **DE** → **GND**
+- MAX485 **RE** → **GND**
+
+#### Data — level-shift RO → RX2
+
+The MAX485 is powered at 5 V, so its **RO** pin can output ~5 V. The ESP32 GPIO must not exceed **3.3 V**. Use a resistor divider:
+
+```
+MAX485 RO ---[ 1.8 kΩ ]---+--- ESP32 RX2 (GPIO16)
+                          |
+                        [ 3.3 kΩ ]
+                          |
+                         GND
+```
+
+- MAX485 **RO** → 1.8 kΩ → **ESP32 RX2 (GPIO16)**
+- ESP32 **RX2 (GPIO16)** → 3.3 kΩ → **GND**
+
+Resistors are not polarized — either orientation works.
+
+#### DMX IN — XLR-3 to MAX485
+- XLR **Pin 1** → **GND**
+- XLR **Pin 2 (Data−)** → MAX485 **B**
+- XLR **Pin 3 (Data+)** → MAX485 **A**
+
+If DMX is not received, swap A and B.
+
+### Receiver Box — Wireless to DMX OUT
+
+This box receives wireless frames from the sender ESP32, then drives the MAX485 in **transmit mode** to output DMX on a male XLR-3 connector.
+
+#### UART settings
+
+Same as sender: **250 000 8N2**.
+
+#### Power
+- MAX485 **VCC** → ESP32 **VIN (5 V)**
+- MAX485 **GND** → ESP32 **GND**
+
+#### Mode pins (transmit mode — driver enabled, receiver disabled)
+- MAX485 **DE** → ESP32 **3V3**
+- MAX485 **RE** → ESP32 **3V3**
+
+You can tie **DE and RE together** and run a single wire to **3V3**.
+
+#### Data
+- ESP32 **TX2 (GPIO17)** → MAX485 **DI**
+
+No level shifting needed here — the 3.3 V TX2 signal is safe for the MAX485 DI input.
+
+#### DMX OUT — XLR-3 to MAX485
+- XLR **Pin 1** → **GND**
+- XLR **Pin 2 (Data−)** → MAX485 **B**
+- XLR **Pin 3 (Data+)** → MAX485 **A**
+
+### Termination, Decoupling, and Protection
+
+#### Termination resistor (recommended, receiver only)
+Add **120 Ω across A and B** at the end of the DMX line. On the receiver DMX OUT box, make this **switchable** (ON/OFF jumper or SPDT switch), because you should only terminate if this box is the **last device** on that DMX cable run.
+
+#### Decoupling capacitors (both boxes)
+Place near each MAX485 module, across **VCC** and **GND**:
+
+- **0.1 µF (100 nF) ceramic** capacitor: either leg to 5 V, other leg to GND
+- **10 µF electrolytic** capacitor: **+** leg to 5 V (VCC), **−** leg to GND (look for the stripe marking the negative leg)
+
+Both capacitors go **in parallel** between VCC and GND. They reduce power-supply noise and prevent resets.
+
+#### Optional series resistors
+To reduce ringing on longer cable runs, add **33–68 Ω** in series with each of the **A** and **B** lines, close to the screw terminal.
+
+#### Optional TVS diode
+For hot-plug robustness and ESD protection, add an RS-485 TVS diode array across the **A** and **B** lines.
+
+### Isolation Note
+
+Electrical insulating tape prevents short circuits but **is not galvanic isolation**. ANSI-ESTA E1.11 DMX512-A requires devices to be electrically isolated from the DMX bus.
+
+For stage/production use, add:
+- A digital isolator (e.g. ISO7221) or optocouplers on the UART lines, **and**
+- An isolated DC-DC converter for the RS-485 side, **or**
+- Use an all-in-one isolated RS-485 transceiver module.
 
 ## To Do
 
