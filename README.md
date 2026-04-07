@@ -980,6 +980,8 @@ The green screw terminal is the RS-485 bus: **A** and **B**.
 
 This box **receives DMX** from a console via a female XLR-3 input, converts it with the MAX485 in **receive mode**, and feeds the data to the ESP32.
 
+![Sender box wiring (uploaded)](docs/images/sender-box-wiring.png)
+
 #### UART settings (DMX512)
 
 | Parameter | Value |
@@ -1024,6 +1026,8 @@ If DMX is not received, swap A and B.
 ### Receiver Box — Wireless to DMX OUT
 
 This box receives wireless frames from the sender ESP32, then drives the MAX485 in **transmit mode** to output DMX on a male XLR-3 connector.
+
+![Receiver box wiring (uploaded)](docs/images/receiver-box-wiring.png)
 
 #### UART settings
 
