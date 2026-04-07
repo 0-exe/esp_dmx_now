@@ -1,85 +1,87 @@
 # esp_dmx
 
-This library allows for transmitting and receiving ANSI-ESTA E1.11 DMX-512A and ANSI-ESTA E1.20 RDM using an Espressif ESP32. It provides control and analysis of the packet configuration and allows the user to read or write synchronously or asynchronously from the DMX bus using whichever hardware UART port that is desired. This library also includes tools for data error-checking to safely process DMX and RDM commands as well as DMX packet metadata extraction to assist with troubleshooting errors.
+Diese Bibliothek ermöglicht das Senden und Empfangen von ANSI-ESTA E1.11 DMX-512A und ANSI-ESTA E1.20 RDM mit einem Espressif ESP32. Sie bietet Kontrolle und Analyse der Paketkonfiguration und erlaubt synchrones oder asynchrones Lesen und Schreiben auf dem DMX-Bus über den gewünschten Hardware-UART-Port. Zusätzlich enthält sie Werkzeuge zur Fehlerprüfung und zur Extraktion von DMX-Paket-Metadaten für eine einfachere Fehlersuche.
 
-## Contents
+## Inhalte
 
-- [Library Installation](#library-installation)
+- [Bibliotheksinstallation](#library-installation)
   - [Arduino](#arduino)
   - [ESP-IDF](#esp-idf)
   - [PlatformIO](#platformio)
-- [Quick-Start Guide](#quick-start-guide)
-- [What is DMX?](#what-is-dmx)
-  - [What is RDM?](#what-is-rdm)
-- [DMX Basics](#dmx-basics)
-  - [Addresses and the Start Code](#addresses-and-the-start-code)
-  - [Footprints](#footprints)
-  - [Universes](#universes)
-- [RDM Basics](#rdm-basics)
-  - [Unique IDs](#unique-ids)
-  - [Sub-devices](#sub-devices)
-  - [Parameters](#parameters)
-  - [Discovery](#discovery)
-  - [Responses](#responses)
-- [Configuring the DMX Port](#configuring-the-dmx-port)
-  - [Installing the Driver](#installing-the-driver)
-  - [Setting Communication Pins](#setting-communication-pins)
-  - [Timing Configuration](#timing-configuration)
-- [Reading and Writing DMX](#reading-and-writing-dmx)
-  - [Reading DMX](#reading-dmx)
-  - [DMX Sniffer](#dmx-sniffer)
-  - [Writing DMX](#writing-dmx)
-  - [DMX Parameters](#dmx-parameters)
-- [Reading and Writing RDM](#reading-and-writing-rdm)
-  - [RDM Requests](#rdm-requests)
-  - [Discovering Devices](#discovering-devices)
-  - [RDM Responder](#rdm-responder)
-- [Error Handling](#error-handling)
-  - [Timing Macros](#timing-macros)
-  - [DMX Start Codes](#dmx-start-codes)
-- [Additional Considerations](#additional-considerations)
-  - [Using Flash or Disabling Cache](#using-flash-or-disabling-cache)
-  - [Wiring an RS-485 Circuit](#wiring-an-rs-485-circuit)
-  - [Hardware Specifications](#hardware-specifications)
-- [Wireless DMX Build Guide](#wireless-dmx-build-guide)
+- [Schnellstartanleitung](#quick-start-guide)
+- [Was ist DMX?](#what-is-dmx)
+  - [Was ist RDM?](#what-is-rdm)
+- [DMX-Grundlagen](#dmx-basics)
+  - [Adressen und der Startcode](#addresses-and-the-start-code)
+  - [Kanalbelegungen (Footprints)](#footprints)
+  - [Universen](#universes)
+- [RDM-Grundlagen](#rdm-basics)
+  - [Eindeutige IDs](#unique-ids)
+  - [Subgeräte](#sub-devices)
+  - [Parameter](#parameters)
+  - [Geräteerkennung](#discovery)
+  - [Antworten](#responses)
+- [DMX-Port konfigurieren](#configuring-the-dmx-port)
+  - [Treiber installieren](#installing-the-driver)
+  - [Kommunikations-Pins festlegen](#setting-communication-pins)
+  - [Timing-Konfiguration](#timing-configuration)
+- [DMX lesen und schreiben](#reading-and-writing-dmx)
+  - [DMX lesen](#reading-dmx)
+  - [DMX-Sniffer](#dmx-sniffer)
+  - [DMX schreiben](#writing-dmx)
+  - [DMX-Parameter](#dmx-parameters)
+- [RDM lesen und schreiben](#reading-and-writing-rdm)
+  - [RDM-Anfragen](#rdm-requests)
+  - [Geräte entdecken](#discovering-devices)
+  - [RDM-Responder](#rdm-responder)
+- [Fehlerbehandlung](#error-handling)
+  - [Timing-Makros](#timing-macros)
+  - [DMX-Startcodes](#dmx-start-codes)
+- [Weitere Hinweise](#additional-considerations)
+  - [Flash-Nutzung oder Cache deaktivieren](#using-flash-or-disabling-cache)
+  - [RS-485-Schaltung verdrahten](#wiring-an-rs-485-circuit)
+  - [Hardware-Spezifikationen](#hardware-specifications)
+- [Bauanleitung für kabelloses DMX](#wireless-dmx-build-guide)
   - [Hardware](#hardware)
-  - [ESP32 Pins](#esp32-pins)
-  - [MAX485 Module Pins](#max485-module-pins)
-  - [XLR-3 Pinout](#xlr-3-pinout)
-  - [Sender Box — DMX IN to Wireless](#sender-box--dmx-in-to-wireless)
-  - [Receiver Box — Wireless to DMX OUT](#receiver-box--wireless-to-dmx-out)
-  - [Termination, Decoupling, and Protection](#termination-decoupling-and-protection)
-  - [Fully Functional Wireless Code (Arduino)](#fully-functional-wireless-code-arduino)
-  - [Isolation Note](#isolation-note)
-- [To Do](#to-do)
-- [Appendix](#appendix)
-  - [Command Classes](#command-classes)
-  - [NACK Reason Codes](#nack-reason-codes)
-  - [Parameter IDs](#parameter-ids)
-  - [Product Categories](#product-categories)
-  - [Response Types](#response-types)
+  - [ESP32-Pins](#esp32-pins)
+  - [MAX485-Modul-Pins](#max485-module-pins)
+  - [XLR-3-Pinbelegung](#xlr-3-pinout)
+  - [Senderbox — DMX IN zu Wireless](#sender-box--dmx-in-to-wireless)
+  - [Empfängerbox — Wireless zu DMX OUT](#receiver-box--wireless-to-dmx-out)
+  - [Abschluss, Entkopplung und Schutz](#termination-decoupling-and-protection)
+  - [Voll funktionsfähiger Wireless-Code (Arduino)](#fully-functional-wireless-code-arduino)
+  - [Hinweis zur Isolation](#isolation-note)
+- [Aufgabenliste](#to-do)
+- [Anhang](#appendix)
+  - [Befehlsklassen](#command-classes)
+  - [NACK-Grundcodes](#nack-reason-codes)
+  - [Parameter-IDs](#parameter-ids)
+  - [Produktkategorien](#product-categories)
+  - [Antworttypen](#response-types)
 
-## Library Installation
+<a id="library-installation"></a>
+## Bibliotheksinstallation
 
 ### Arduino
 
-This library requires the Arduino-ESP32 framework version 2.0.3 or newer. To install the correct framework, follow Espressif's instructions on the Arduino-ESP32 documentation page [here](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html).
+Diese Bibliothek benötigt das Arduino-ESP32-Framework in Version 2.0.3 oder neuer. Um das richtige Framework zu installieren, folge den Espressif-Anleitungen auf der Arduino-ESP32-Dokumentationsseite [hier](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html).
 
-This library can be installed by cloning this repository into your your `Arduino/libaries` folder or by searching for `esp_dmx` in the Arduino IDE Library Manager. Then simply include the library by adding `#include "esp_dmx.h"` at the top of your Arduino sketch.
+Diese Bibliothek kann installiert werden, indem dieses Repository in deinen Ordner `Arduino/libaries` geklont wird oder indem nach `esp_dmx` im Arduino-IDE-Bibliotheksmanager gesucht wird. Binde die Bibliothek anschließend ein, indem du `#include "esp_dmx.h"` am Anfang deines Arduino-Sketches ergänzt.
 
 ### ESP-IDF
 
-This library requires ESP-IDF version 4.4.1 or newer. Clone this repository into your project's `components` folder. The library can be linked by writing `#include "esp_dmx.h"` at the top of your `main.c` file.
+Diese Bibliothek benötigt ESP-IDF Version 4.4.1 oder neuer. Klone dieses Repository in den `components`-Ordner deines Projekts. Die Bibliothek kann eingebunden werden, indem `#include "esp_dmx.h"` am Anfang deiner `main.c` steht.
 
 ### PlatformIO
 
-This library is compatible with the PlatformIO IDE. Search for this library in the PlatformIO library registry and add it to your project. The library can be included by writing `#include "esp_dmx.h"` at the top of your `main.c` or `main.cpp` file.
+Diese Bibliothek ist mit der PlatformIO-IDE kompatibel. Suche die Bibliothek im PlatformIO-Bibliotheksregister und füge sie deinem Projekt hinzu. Eingebunden wird sie mit `#include "esp_dmx.h"` am Anfang deiner `main.c` oder `main.cpp`.
 
-This library includes a `Kconfig` file for configuring build options on the ESP32. When using the ESP-IDF framework, it is recommended to move library folders to a `components` folder located in your project's root directory rather than leaving PlatformIO installed libraries in their default location. This is not required but it can result in more a more performant driver. See [Using Flash or Disabling Cache](#using-flash-or-disabling-cache) for more information.
+Diese Bibliothek enthält eine `Kconfig`-Datei zur Konfiguration von Build-Optionen auf dem ESP32. Bei Nutzung des ESP-IDF-Frameworks wird empfohlen, Bibliotheksordner in einen `components`-Ordner im Projektstamm zu verschieben, statt die von PlatformIO installierten Bibliotheken am Standardort zu belassen. Das ist nicht zwingend, kann aber zu einem leistungsfähigeren Treiber führen. Weitere Informationen unter [Flash-Nutzung oder Cache deaktivieren](#using-flash-or-disabling-cache).
 
-## Quick-Start Guide
+<a id="quick-start-guide"></a>
+## Schnellstartanleitung
 
-To get started, call the following code in your `setup()` function if using Arduino, or `app_main()` in your `main.c` file if using ESP-IDF.
+Für den Einstieg rufe den folgenden Code in deiner `setup()`-Funktion auf, wenn du Arduino nutzt, oder in `app_main()` deiner `main.c`, wenn du ESP-IDF verwendest.
 
 ```c
 const dmx_port_t dmx_num = DMX_NUM_1;
@@ -103,7 +105,7 @@ const int rts_pin = 21;
 dmx_set_pin(dmx_num, tx_pin, rx_pin, rts_pin);
 ```
 
-To write data to the DMX bus, two functions are provided. The function `dmx_write()` writes data to the DMX buffer and `dmx_send()` sends the data out onto the bus. The function `dmx_wait_sent()` is used to block the task until the DMX bus is idle.
+Zum Schreiben von Daten auf den DMX-Bus stehen zwei Funktionen bereit. `dmx_write()` schreibt Daten in den DMX-Puffer und `dmx_send()` sendet sie auf den Bus. Mit `dmx_wait_sent()` wird der Task blockiert, bis der DMX-Bus wieder frei ist.
 
 ```c
 uint8_t data[DMX_PACKET_SIZE] = {0};
@@ -120,7 +122,7 @@ while (true) {
 }
 ```
 
-To read from the DMX bus, two additional functions are provided. The function `dmx_receive()` waits until a new packet has been received. The function `dmx_read()` reads the data from the driver buffer into an array so that it can be processed. If it is desired to process RDM requests, the function `rdm_send_response()` may be used.
+Zum Lesen vom DMX-Bus stehen zwei weitere Funktionen bereit. `dmx_receive()` wartet, bis ein neues Paket empfangen wurde. `dmx_read()` liest die Daten aus dem Treiberpuffer in ein Array, damit sie verarbeitet werden können. Wenn RDM-Anfragen verarbeitet werden sollen, kann `rdm_send_response()` verwendet werden.
 
 ```c
 dmx_packet_t packet;
@@ -142,124 +144,138 @@ while (true) {
 }
 ```
 
-That's it! For more detailed information on how this library works including details on RDM, keep reading.
+Das war's! Für detailliertere Informationen zur Funktionsweise dieser Bibliothek inklusive RDM-Details lies weiter.
 
-## What is DMX?
+<a id="what-is-dmx"></a>
+## Was ist DMX?
 
-DMX is a unidirectional communication protocol used primarily in the entertainment industry to control lighting and stage equipment. DMX is transmitted as a continuous stream of packets using half-duplex RS-485 signalling with a standard UART port. DMX devices are typically connected using XLR5 in a daisy-chain configuration but other connectors such as XLR3 are common in consumer products.
+DMX ist ein unidirektionales Kommunikationsprotokoll, das hauptsächlich in der Veranstaltungsbranche zur Steuerung von Licht- und Bühnentechnik verwendet wird. DMX wird als kontinuierlicher Paketstrom über halbduplexes RS-485-Signaling mit einem standardmäßigen UART-Port übertragen. DMX-Geräte werden typischerweise per XLR5 in Daisy-Chain-Konfiguration verbunden, wobei in Consumer-Produkten auch andere Steckverbinder wie XLR3 verbreitet sind.
 
-Each DMX packet begins with a high-to-low transition called the break, followed by a low-to-high transition called the mark-after-break, followed by an eight-bit byte. This first byte is called the start code. The start-of-packet break, mark-after-break, and start code is called the reset sequence. After the reset sequence, a packet of up to 512 data bytes may be sent.
+Jedes DMX-Paket beginnt mit einem High-zu-Low-Übergang (Break), gefolgt von einem Low-zu-High-Übergang (Mark-After-Break) und anschließend einem 8-Bit-Byte. Dieses erste Byte heißt Startcode. Break, Mark-After-Break und Startcode bilden zusammen die Reset-Sequenz. Nach der Reset-Sequenz kann ein Paket mit bis zu 512 Datenbytes gesendet werden.
 
-DMX imposes very strict timing requirements to allow for backwards compatibility with older lighting equipment. Frame rates may range from 1fps to up to approximately 830fps. A typical DMX controller transmits packets between approximately 25fps to 44fps. DMX receivers and transmitters have different timing requirements which must be adhered to carefully to ensure commands are processed.
+DMX hat sehr strenge Timing-Anforderungen, um Abwärtskompatibilität mit älterer Lichttechnik zu ermöglichen. Bildraten reichen von 1 fps bis ungefähr 830 fps. Ein typischer DMX-Controller sendet Pakete mit etwa 25 bis 44 fps. DMX-Empfänger und -Sender haben unterschiedliche Timing-Vorgaben, die sorgfältig eingehalten werden müssen, damit Befehle korrekt verarbeitet werden.
 
-Today, DMX often struggles to keep up with the demands of the latest hardware. Its low data rate and small packet size sees it losing market popularity over more capable protocols. However its simplicity and robustness often makes it the first choice for small scale projects.
+Heute stößt DMX bei den Anforderungen moderner Hardware oft an Grenzen. Die geringe Datenrate und kleine Paketgröße führen dazu, dass es gegenüber leistungsfähigeren Protokollen an Popularität verliert. Durch seine Einfachheit und Robustheit bleibt es jedoch oft die erste Wahl für kleinere Projekte.
 
-For in-depth information on DMX, see the [E1.11 standards document](https://tsp.esta.org/tsp/documents/docs/ANSI-ESTA_E1-11_2008R2018.pdf).
+Ausführliche Informationen zu DMX findest du im [E1.11-Standarddokument](https://tsp.esta.org/tsp/documents/docs/ANSI-ESTA_E1-11_2008R2018.pdf).
 
-### What is RDM?
+<a id="what-is-rdm"></a>
+### Was ist RDM?
 
-RDM stands for Remote Device Management. It is an extension to the DMX protocol to allow intelligent, bidirectional communication between devices from multiple manufacturers utilizing a modified DMX data link. RDM permits a console or other controlling device to discover and then configure, monitor, and manage intermediate and end-devices connected through a DMX network.
+RDM steht für Remote Device Management. Es ist eine Erweiterung des DMX-Protokolls, die eine intelligente bidirektionale Kommunikation zwischen Geräten verschiedener Hersteller über einen angepassten DMX-Datenlink ermöglicht. RDM erlaubt einer Konsole oder einem anderen Steuergerät, Geräte im DMX-Netzwerk zu entdecken sowie zu konfigurieren, zu überwachen und zu verwalten.
 
-When RDM capable devices must be configured but are inconveniently out of reach, it is said that RDM is "faster than the ladder." Instead of needing to climb a ladder to reach a device users are able to make changes to device settings from their DMX controller.
+Wenn RDM-fähige Geräte konfiguriert werden müssen, aber schlecht erreichbar sind, sagt man: RDM ist „schneller als die Leiter“. Statt auf eine Leiter steigen zu müssen, können Nutzer Geräteeinstellungen direkt vom DMX-Controller aus ändern.
 
-For in-depth information on RDM, see the [E1.20 standards document](https://getdlight.com/media/kunena/attachments/42/ANSI_E1-20_2010.pdf).
+Ausführliche Informationen zu RDM findest du im [E1.20-Standarddokument](https://getdlight.com/media/kunena/attachments/42/ANSI_E1-20_2010.pdf).
 
-## DMX Basics
+<a id="dmx-basics"></a>
+## DMX-Grundlagen
 
-In a typical configuration, a DMX system consists of one DMX controller and up to 32 DMX fixtures per DMX port. A five-pin XLR cable, commonly known as a DMX cable, is connected to the DMX-out port of the DMX controller and into the the DMX-in port of the first DMX fixture. Each subsequent fixture is connected by a DMX cable between the DMX-out port of the previous fixture and the DMX-in port of the next fixture. A DMX terminator may be connected to the DMX-out port of the final fixture. This is only required when using RDM but can be helpful to ensure DMX signal stability when connecting more than 32 fixtures or for long runs of DMX cable.
+In einer typischen Konfiguration besteht ein DMX-System aus einem DMX-Controller und bis zu 32 DMX-Geräten pro DMX-Port. Ein fünfpoliges XLR-Kabel (DMX-Kabel) wird vom DMX-Out des Controllers zum DMX-In des ersten Geräts verbunden. Jedes weitere Gerät wird per DMX-Kabel vom DMX-Out des vorherigen Geräts zum DMX-In des nächsten verbunden. Am DMX-Out des letzten Geräts kann ein DMX-Abschlusswiderstand angeschlossen werden. Das ist nur bei RDM erforderlich, kann aber auch bei mehr als 32 Geräten oder langen Kabelwegen zur Signalstabilität beitragen.
 
-### Addresses and the Start Code
+<a id="addresses-and-the-start-code"></a>
+### Adressen und der Startcode
 
-DMX addresses are needed for DMX controllers to communicate with fixtures. A fixture's address can be set between 1 and 512 (inclusive) by setting the fixture's DIP switches or by using the fixture's built-in display. DMX addresses correspond to DMX slots in a DMX packet. DMX address one is mapped to DMX packet slot one. Each DMX slot is an 8-bit number. A slot's minimum value is 0 and its maximum value is 255. To control a DMX dimmer set to DMX address five, DMX packet slot five must be written. To set the DMX dimmer to full intensity, slot five must be written to value 255. To set the dimmer to zero intensity, slot five must be written to value 0. Setting slot five to any value in between will dim the intensity appropriately.
+DMX-Adressen werden benötigt, damit DMX-Controller mit Geräten kommunizieren können. Die Adresse eines Geräts kann zwischen 1 und 512 (einschließlich) eingestellt werden, entweder über DIP-Schalter oder über das integrierte Display. DMX-Adressen entsprechen DMX-Slots im Paket. Adresse 1 entspricht Slot 1. Jeder DMX-Slot ist ein 8-Bit-Wert mit dem Bereich 0 bis 255. Um einen DMX-Dimmer auf Adresse 5 zu steuern, muss Slot 5 geschrieben werden. Für volle Intensität wird Slot 5 auf 255 gesetzt, für null Intensität auf 0. Werte dazwischen dimmen entsprechend.
 
-Slot zero in the DMX packet is called the DMX start code. The start code informs DMX fixtures what type of packet is being sent. Standard DMX packets use a start code of `0x00`, also called the null start code. DMX fixtures will not respond to DMX packets unless the packet begins with a null start code! A list of the other supported start codes can be found in the [DMX start codes](#dmx-start-codes) section.
+Slot 0 im DMX-Paket wird DMX-Startcode genannt. Der Startcode teilt den DMX-Geräten mit, welcher Pakettyp gesendet wird. Standard-DMX-Pakete verwenden den Startcode `0x00`, auch Null-Startcode genannt. DMX-Geräte reagieren nicht auf DMX-Pakete, wenn das Paket nicht mit einem Null-Startcode beginnt. Eine Liste weiterer unterstützter Startcodes findest du im Abschnitt [DMX-Startcodes](#dmx-start-codes).
 
-### Footprints
+<a id="footprints"></a>
+### Kanalbelegungen (Footprints)
 
-Many DMX fixtures support multiple controllable DMX parameters. Fixtures that support multiple parameters use multiple DMX addresses. An RGB LED fixture is a common example of a multi-parameter fixture. It uses three parameters: red, green, and blue. In this example, this fixture would therefore use three, consecutive DMX addresses. This is called the fixture's DMX footprint. The red, green, and blue parameters of an RGB LED fixture set to DMX address five can be controlled by writing to slots five, six, and seven, respectively. A fixture's DMX footprint can be found by reading its user manual. It is possible to address multiple DMX fixtures so that their DMX footprints overlap but this is uncommon.
+Viele DMX-Geräte unterstützen mehrere steuerbare DMX-Parameter. Geräte mit mehreren Parametern verwenden mehrere DMX-Adressen. Ein RGB-LED-Gerät ist ein typisches Beispiel: Es hat die drei Parameter Rot, Grün und Blau. Entsprechend belegt es drei aufeinanderfolgende DMX-Adressen. Das nennt man den DMX-Footprint des Geräts. Bei einer Startadresse 5 werden Rot, Grün und Blau über die Slots 5, 6 und 7 gesteuert. Der Footprint eines Geräts steht im Handbuch. Es ist möglich, Geräte so zu adressieren, dass sich Footprints überlappen, üblich ist das jedoch nicht.
 
-Multi-parameter fixtures may support multiple footprints. On a fixture that supports multiple footprints, only one footprint can be active at a time. Larger footprints may be used to provide finer control of the fixture's DMX parameters. Conversely, smaller footprints may be used when finer control of a fixture is not needed. Instructions to change a fixture's active footprint may be found by consulting its user manual.
+Geräte mit mehreren Parametern können mehrere Footprints unterstützen. Bei solchen Geräten ist immer nur ein Footprint gleichzeitig aktiv. Größere Footprints ermöglichen eine feinere Steuerung, kleinere Footprints reichen aus, wenn keine hohe Auflösung benötigt wird. Hinweise zum Umschalten des aktiven Footprints findest du im Handbuch des Geräts.
 
-A fixture which supports multiple footprints is said to possess multiple personalities. Each DMX personality may support a different footprint.
+Ein Gerät mit mehreren Footprints besitzt mehrere Personalities. Jede DMX-Personality kann einen anderen Footprint unterstützen.
 
-### Universes
+<a id="universes"></a>
+### Universen
 
-When more than 512 DMX addresses are used, it is required to use multiple DMX ports. Each DMX port is called a DMX universe. DMX fixtures can be uniquely identified by their DMX universe and address numbers. A common way to notate this is by separating the universe and address with a `/`. Therefore `3/475` represents universe three, address 475. It is important to understand that DMX fixtures are not aware of the concept of a universe. A fixture set to DMX address one will respond to writes to slot one on whichever universe to which it is connected.
+Wenn mehr als 512 DMX-Adressen verwendet werden, sind mehrere DMX-Ports nötig. Jeder DMX-Port wird DMX-Universum genannt. DMX-Geräte lassen sich eindeutig über Universum und Adresse identifizieren. Üblich ist die Schreibweise mit `/`, z. B. `3/475` für Universum 3, Adresse 475. Wichtig: DMX-Geräte kennen das Konzept „Universum“ nicht. Ein Gerät auf DMX-Adresse 1 reagiert auf Slot-1-Schreibvorgänge in dem Universum, an das es angeschlossen ist.
 
-## RDM Basics
+<a id="rdm-basics"></a>
+## RDM-Grundlagen
 
-Compared to DMX, RDM is a fairly complex protocol which utilizes different packet and data types depending on the information that is being requested. This library attempts to abstract away many of the details of the RDM implementation to facilitate code ease-of-use while still providing a powerful feature set. The following sections are intended to provide a introduction to RDM as it pertains to this library. For a more comprehensive introduction of RDM, see the [E1.20 standards document](https://getdlight.com/media/kunena/attachments/42/ANSI_E1-20_2010.pdf).
+Im Vergleich zu DMX ist RDM ein recht komplexes Protokoll, das je nach angeforderter Information unterschiedliche Paket- und Datentypen verwendet. Diese Bibliothek abstrahiert viele Details der RDM-Implementierung, um die Nutzung im Code zu vereinfachen und gleichzeitig einen leistungsfähigen Funktionsumfang zu bieten. Die folgenden Abschnitte geben eine Einführung in RDM im Kontext dieser Bibliothek. Für eine umfassendere Einführung siehe das [E1.20-Standarddokument](https://getdlight.com/media/kunena/attachments/42/ANSI_E1-20_2010.pdf).
 
-### Unique IDs
+<a id="unique-ids"></a>
+### Eindeutige IDs
 
-In an RDM network, there is one controller device and several responder devices. Each device in the network has a Unique ID (UID) which uniquely identifies itself against others in the network. If an RDM device has multiple DMX ports, it may possess multiple UIDs; one for each DMX port. UIDs are 48-bits long. The most-significant 16-bits are a device's manufacturer ID. Devices made by the same manufacturer have the same most-significant 16-bits. The remaining, 32 least-significant-bits are a device's device ID. Readers may draw a reasonable comparison to MAC addresses in IP networking equipment. Every IP capable device has at least one MAC address and if they have multiple network interfaces they may have multiple MAC addresses. Similarly, the most significant bits in a MAC address identify a network interface's manufacturer.
+In einem RDM-Netzwerk gibt es ein Controller-Gerät und mehrere Responder-Geräte. Jedes Gerät besitzt eine Unique ID (UID), die es eindeutig im Netzwerk identifiziert. Hat ein RDM-Gerät mehrere DMX-Ports, kann es mehrere UIDs besitzen, eine pro DMX-Port. UIDs sind 48 Bit lang. Die oberen 16 Bit sind die Hersteller-ID, die unteren 32 Bit die Geräte-ID. Ein sinnvoller Vergleich sind MAC-Adressen in IP-Netzwerken: Jedes IP-fähige Gerät hat mindestens eine MAC-Adresse, bei mehreren Netzwerkschnittstellen auch mehrere. Ebenso kennzeichnen die oberen Bits einer MAC-Adresse den Hersteller der Schnittstelle.
 
-UIDs are represented in text by displaying the UID in hexadecimal and by separating the manufacturer ID from the device ID with a `:`. If a device has a manufacturer ID with a value of `0xabcd` and device ID with a value of `0x12345678`, its full UID would be displayed as `abcd:12345678`.
+UIDs werden textuell hexadezimal dargestellt, wobei Hersteller-ID und Geräte-ID durch `:` getrennt sind. Hat ein Gerät z. B. die Hersteller-ID `0xabcd` und die Geräte-ID `0x12345678`, lautet die vollständige UID `abcd:12345678`.
 
-When a controller device composes an RDM request, it must be addressed using a destination UID. The recipient of a request may be a single device, by using the device's UID, or multiple devices, by using a broadcast UID. Broadcast UIDs can be addressed to every device of a specific manufacturer or to all devices on the RDM network. To send a manufacturer broadcast, the destination UID's manufacturer ID must match the manufacturer ID of the desired manufacturer, and the device ID must be `ffffffff`. To broadcast to every device with the manufacturer ID of `05e0`, the UID must be set to `05e0:ffffffff`. The UID used to broadcast to all devices on the RDM network is `ffff:ffffffff`.
+Wenn ein Controller eine RDM-Anfrage erstellt, muss sie mit einer Ziel-UID adressiert werden. Empfänger kann ein einzelnes Gerät (mit seiner UID) oder mehrere Geräte (per Broadcast-UID) sein. Broadcast-UIDs können an alle Geräte eines bestimmten Herstellers oder an alle Geräte im RDM-Netzwerk adressiert werden. Für einen Hersteller-Broadcast muss die Hersteller-ID der Ziel-UID dem gewünschten Hersteller entsprechen und die Geräte-ID `ffffffff` sein. Um an alle Geräte mit Hersteller-ID `05e0` zu senden, muss die UID `05e0:ffffffff` lauten. Für Broadcast an alle Geräte im RDM-Netzwerk wird `ffff:ffffffff` verwendet.
 
-The lowest possible UID is `0001:00000000` and the highest possible UID is `ffff:fffffffe`. In practice the manufacturer ID `ffff` is not permitted so real-world RDM devices would never possess a UID higher than `7fff:fffffffe`. This library represents the maximum UID with the constant `RDM_UID_MAX`.
+Die kleinste mögliche UID ist `0001:00000000`, die größte `ffff:fffffffe`. In der Praxis ist die Hersteller-ID `ffff` nicht zulässig, daher hätten reale RDM-Geräte nie eine UID größer als `7fff:fffffffe`. Diese Bibliothek repräsentiert die maximale UID mit der Konstante `RDM_UID_MAX`.
 
-Organizations may apply for a unique manufacturer ID by contacting ESTA. The instructions to do so and a list of registered manufacturer IDs can be found [here](https://tsp.esta.org/tsp/working_groups/CP/mfctrIDs.php). This software library is registered and listed with the manufacturer ID of `05e0`. Users of this library may use this manufacturer ID for their devices.
+Organisationen können bei ESTA eine eindeutige Hersteller-ID beantragen. Anleitungen dazu und eine Liste registrierter Hersteller-IDs findest du [hier](https://tsp.esta.org/tsp/working_groups/CP/mfctrIDs.php). Diese Softwarebibliothek ist mit der Hersteller-ID `05e0` registriert. Nutzer dieser Bibliothek dürfen diese Hersteller-ID für ihre Geräte verwenden.
 
-In this library, UIDs are represented with the `rdm_uid_t` type. The macro `rdm_uid_broadcast_man()` can be used to create a UID which broadcasts to the desired manufacturer ID and the constant `RDM_UID_BROADCAST_ALL` can be used to broadcast to all devices on the RDM network.
+In dieser Bibliothek werden UIDs mit dem Typ `rdm_uid_t` dargestellt. Mit dem Makro `rdm_uid_broadcast_man()` kann eine UID für Broadcasts an eine gewünschte Hersteller-ID erzeugt werden, und mit `RDM_UID_BROADCAST_ALL` wird an alle Geräte im RDM-Netzwerk gesendet.
 
-### Sub-devices
+<a id="sub-devices"></a>
+### Subgeräte
 
-Each RDM device may support up to 512 sub-devices. An example of a device that may support sub-devices is a dimmer rack which possesses multiple dimmers. Requests may be addressed to a specific dimmer in the dimmer rack by addressing the dimmer rack's UID, and specifying a sub-device number to target the appropriate dimmer.
+Jedes RDM-Gerät kann bis zu 512 Subgeräte unterstützen. Ein Beispiel ist ein Dimmerrack mit mehreren Dimmern. Anfragen können an einen bestimmten Dimmer adressiert werden, indem die UID des Racks verwendet und die entsprechende Subgeräte-Nummer angegeben wird.
 
-The sub-device number which represents the root device is `0x0000`. A request may also be addressed to all sub-devices of a root device by using the sub-device number `0xffff`. The constants `RDM_SUB_DEVICE_ROOT` and `RDM_SUB_DEVICE_ALL` are provided to improve code readability.
+Die Subgeräte-Nummer für das Root-Gerät ist `0x0000`. Mit der Subgeräte-Nummer `0xffff` kann eine Anfrage an alle Subgeräte eines Root-Geräts adressiert werden. Die Konstanten `RDM_SUB_DEVICE_ROOT` und `RDM_SUB_DEVICE_ALL` verbessern dabei die Lesbarkeit des Codes.
 
-A root device and its sub-devices may support different RDM parameters, but each sub-device within a root device must support the same parameters as each other.
+Ein Root-Gerät und seine Subgeräte können unterschiedliche RDM-Parameter unterstützen, aber alle Subgeräte innerhalb desselben Root-Geräts müssen untereinander denselben Parametersatz unterstützen.
 
-### Parameters
+<a id="parameters"></a>
+### Parameter
 
-RDM requests must be able to fetch and update parameters. The RDM standard specifies more than 50 different Parameter IDs (PIDs) which a device may support. The standard also specifies that manufacturers may define custom PIDs for their devices.
+RDM-Anfragen müssen Parameter lesen und aktualisieren können. Der RDM-Standard definiert mehr als 50 verschiedene Parameter IDs (PIDs), die ein Gerät unterstützen kann. Außerdem dürfen Hersteller eigene PIDs für ihre Geräte definieren.
 
-Most PIDs can be either GET or SET if the responding device supports the requested PID. Some PIDs may support GET but do not support SET, and vice versa. Some PIDs may support both GET and SET. Three PIDs cannot be GET nor SET. These three PIDs are used for the RDM discovery algorithm. They are `DISC_UNIQUE_BRANCH`, `DISC_MUTE`, and `DISC_UN_MUTE`. This library provides constants for each PID. Each PID in this library is prefixed with `RDM_PID_`. Therefore, `DISC_UNIQUE_BRANCH` would become `RDM_PID_DISC_UNIQUE_BRANCH`. This document will refer to PIDs by their prefixed names for consistency of documentation.
+Die meisten PIDs unterstützen GET oder SET, sofern das antwortende Gerät die angeforderte PID unterstützt. Manche PIDs unterstützen nur GET oder nur SET, manche beides. Drei PIDs unterstützen weder GET noch SET; sie werden für den RDM-Discovery-Algorithmus verwendet: `DISC_UNIQUE_BRANCH`, `DISC_MUTE` und `DISC_UN_MUTE`. Diese Bibliothek stellt für jede PID Konstanten bereit. Jede PID ist mit `RDM_PID_` präfixiert. Aus `DISC_UNIQUE_BRANCH` wird also `RDM_PID_DISC_UNIQUE_BRANCH`. In diesem Dokument werden PIDs konsistent mit diesem Präfix benannt.
 
-RDM specifies that every device (but not its sub-devices necessarily) must support a specific set of PIDs to ensure proper communication between devices. The list of the supported and the required PIDs can be found in the [appendix](#parameter-ids).
+RDM legt fest, dass jedes Gerät (nicht zwingend dessen Subgeräte) einen bestimmten Satz an PIDs unterstützen muss, damit Geräte korrekt miteinander kommunizieren können. Eine Liste unterstützter und erforderlicher PIDs findest du im [Anhang](#parameter-ids).
 
-GET requests may not be sent to all sub-devices of a root device. It is therefore not permitted to send a GET request to `RDM_SUB_DEVICE_ALL`.
+GET-Anfragen dürfen nicht an alle Subgeräte eines Root-Geräts gesendet werden. Daher ist eine GET-Anfrage an `RDM_SUB_DEVICE_ALL` nicht zulässig.
 
-### Discovery
+<a id="discovery"></a>
+### Geräteerkennung
 
-When making RDM requests it is typically needed (but not required) to discover the UIDs of the devices on the RDM network. The discovery process begins with the controller device broadcasting an `RDM_PID_DISC_UNIQUE_BRANCH` command to all devices. The data included in this request consist of an address space defined by a UID lower bound and UID upper bound. Responding devices respond to `RDM_PID_DISC_UNIQUE_BRANCH` requests if their UID is greater-than-or-equal to the lower bound and less-than-or-equal to the upper bound. When multiple devices respond at the same time, data collisions can occur. When a data collision occurs, the controller divides the address space in two. An `RDM_PID_DISC_UNIQUE_BRANCH` request is sent to each new address space. This is repeated until a single device is found within an address space.
+Bei RDM-Anfragen ist es üblicherweise sinnvoll (aber nicht zwingend), zuerst die UIDs der Geräte im RDM-Netzwerk zu ermitteln. Der Discovery-Prozess beginnt damit, dass der Controller den Befehl `RDM_PID_DISC_UNIQUE_BRANCH` an alle Geräte broadcastet. Die Nutzdaten dieser Anfrage definieren einen Adressraum über eine untere und obere UID-Grenze. Geräte antworten auf `RDM_PID_DISC_UNIQUE_BRANCH`, wenn ihre UID größer/gleich der unteren und kleiner/gleich der oberen Grenze ist. Antworten mehrere Geräte gleichzeitig, können Datenkollisionen entstehen. Dann teilt der Controller den Adressraum in zwei Bereiche und sendet je Bereich erneut `RDM_PID_DISC_UNIQUE_BRANCH`. Das wird wiederholt, bis in einem Bereich nur noch ein Gerät gefunden wird.
 
-When a single device is found within an address space, that device is sent an `RDM_PID_DISC_MUTE` request to mute its response to future `RDM_PID_DISC_UNIQUE_BRANCH` requests. When responding to `RDM_PID_DISC_MUTE` requests, devices that have multiple RDM ports return a binding UID which represents its primary UID.
+Wird in einem Adressraum ein einzelnes Gerät gefunden, wird an dieses Gerät `RDM_PID_DISC_MUTE` gesendet, damit es auf spätere `RDM_PID_DISC_UNIQUE_BRANCH`-Anfragen nicht mehr antwortet. Geräte mit mehreren RDM-Ports liefern bei Antworten auf `RDM_PID_DISC_MUTE` eine Binding-UID zurück, die ihre primäre UID repräsentiert.
 
-Some RDM devices act as proxy devices. A proxy device is any inline device that acts as an agent or representative for one or more devices. A proxy device shall respond to all controller messages on behalf of the devices it represents as if it is the represented device. If a device is acting as a proxy device or if it is proxied by another device, it will indicate so in its response to `RDM_PID_DISC_MUTE` and `RDM_PID_DISC_UN_MUTE` requests.
+Einige RDM-Geräte arbeiten als Proxy-Geräte. Ein Proxy ist ein Inline-Gerät, das als Vertreter für ein oder mehrere Geräte agiert. Es beantwortet Controller-Nachrichten im Namen der vertretenen Geräte so, als wäre es selbst das Gerät. Ob ein Gerät als Proxy arbeitet oder über ein anderes Gerät geproxyt wird, wird in Antworten auf `RDM_PID_DISC_MUTE` und `RDM_PID_DISC_UN_MUTE` signalisiert.
 
-Discovery should be performed periodically as discovered devices may be removed from the RDM network or new devices may be added. Before restarting the discovery algorithm, a `RDM_PID_DISC_UN_MUTE` request should be broadcast to all devices in order to detect if devices were removed from the RDM network.
+Die Geräteerkennung sollte regelmäßig durchgeführt werden, da Geräte aus dem RDM-Netzwerk entfernt oder neu hinzugefügt werden können. Bevor der Discovery-Algorithmus neu startet, sollte `RDM_PID_DISC_UN_MUTE` an alle Geräte gebroadcastet werden, um Änderungen erkennen zu können.
 
-### Responses
+<a id="responses"></a>
+### Antworten
 
-Responding devices shall respond to requests only if the request was a non-broadcast request. Responding devices may respond to requests with the following response types:
+Antwortende Geräte sollen nur auf Anfragen reagieren, wenn es sich nicht um Broadcast-Anfragen handelt. Antwortende Geräte können mit folgenden Antworttypen reagieren:
 
-- `RDM_RESPONSE_TYPE_ACK` indicates that the responder has correctly received the controller message and is acting upon the request.
-- `RDM_RESPONSE_TYPE_ACK_OVERFLOW` indicates that the responder has correctly received the controller message and is acting upon the request, but there is more response data available than will fit in a single response packet. To receive the remaining information, controllers are able to send repeated requests to the same PID until the remaining information can fit in a single message.
-- `RDM_RESPONSE_TYPE_ACK_TIMER` indicates that the responder is unable to supply the requested GET information or SET confirmation within the required response time. When sending this response, responding devices include an estimated response time that must elapse before the responder can provide the required information.
-- `RDM_RESPONSE_TYPE_NACK_REASON` indicates that the responder is unable to reply with the requested GET information or unable to process the specified SET command. Responding devices must include a NACK reason code in their response. NACK reason codes are enumerated in the [appendix](#nack-reason-codes).
+- `RDM_RESPONSE_TYPE_ACK` zeigt an, dass der Responder die Controller-Nachricht korrekt empfangen hat und die Anfrage verarbeitet.
+- `RDM_RESPONSE_TYPE_ACK_OVERFLOW` zeigt an, dass der Responder die Anfrage verarbeitet, aber mehr Antwortdaten vorliegen, als in ein einzelnes Antwortpaket passen. Um die restlichen Informationen zu erhalten, kann der Controller wiederholt dieselbe PID anfragen, bis alles in eine einzelne Nachricht passt.
+- `RDM_RESPONSE_TYPE_ACK_TIMER` zeigt an, dass der Responder die angeforderten GET-Informationen oder SET-Bestätigung nicht innerhalb der geforderten Antwortzeit liefern kann. In dieser Antwort gibt das Gerät eine geschätzte Wartezeit an, nach der die benötigte Information bereitsteht.
+- `RDM_RESPONSE_TYPE_NACK_REASON` zeigt an, dass der Responder die angeforderten GET-Informationen nicht liefern oder den angegebenen SET-Befehl nicht verarbeiten kann. Die Antwort muss einen NACK-Grundcode enthalten. NACK-Grundcodes sind im [Anhang](#nack-reason-codes) aufgeführt.
 
-Two additional response types are defined for this library. These response types are included to assist users with processing RDM data.
+Zusätzlich sind in dieser Bibliothek zwei weitere Antworttypen definiert, die bei der Verarbeitung von RDM-Daten helfen.
 
-- `RDM_RESPONSE_TYPE_NONE` indicates that no response was received.
-- `RDM_RESPONSE_TYPE_INVALID` indicates that a response was received, but the response was invalid. This can occur for several reasons including an invalid checksum, or an invalid packet format.
+- `RDM_RESPONSE_TYPE_NONE` zeigt an, dass keine Antwort empfangen wurde.
+- `RDM_RESPONSE_TYPE_INVALID` zeigt an, dass eine Antwort empfangen wurde, diese aber ungültig war. Das kann z. B. durch eine ungültige Prüfsumme oder ein ungültiges Paketformat auftreten.
 
-Responders must respond to every non-broadcast RDM request as well as every broadcast `RDM_PID_DISC_UNIQUE_BRANCH` request if their RDM discovery is un-muted and if their UID falls within the request's address space. When responding to `RDM_PID_DISC_UNIQUE_BRANCH` requests, responders shall not send a DMX break and mark-after-break in order to improve discovery times and shall encode their response to reduce data loss during data collisions. The omission of the DMX break and mark-after-break is handled automatically by the DMX driver. Responders may only respond to `RDM_PID_DISC_UNIQUE_BRANCH`, `RDM_PID_DISC_MUTE`, and `RDM_PID_DISC_UN_MUTE` requests with `RDM_RESPONSE_TYPE_ACK`.
+Responder müssen auf jede nicht gebroadcastete RDM-Anfrage antworten sowie auf jede gebroadcastete `RDM_PID_DISC_UNIQUE_BRANCH`-Anfrage, wenn ihre Discovery nicht gemutet ist und ihre UID im angefragten Adressraum liegt. Bei Antworten auf `RDM_PID_DISC_UNIQUE_BRANCH` dürfen sie keinen DMX-Break und kein Mark-After-Break senden, um die Discovery zu beschleunigen, und müssen ihre Antwort so codieren, dass Datenverlust bei Kollisionen reduziert wird. Das Weglassen von Break und Mark-After-Break übernimmt der DMX-Treiber automatisch. Auf `RDM_PID_DISC_UNIQUE_BRANCH`, `RDM_PID_DISC_MUTE` und `RDM_PID_DISC_UN_MUTE` darf nur mit `RDM_RESPONSE_TYPE_ACK` geantwortet werden.
 
-## Configuring the DMX Port
+<a id="configuring-the-dmx-port"></a>
+## DMX-Port konfigurieren
 
-The DMX driver’s functions identify each of the UART controllers using `dmx_port_t`. This identification is needed for all the following function calls.
+Die Funktionen des DMX-Treibers identifizieren jeden UART-Controller über `dmx_port_t`. Diese Kennung wird bei allen folgenden Funktionsaufrufen benötigt.
 
-### Installing the Driver
+<a id="installing-the-driver"></a>
+### Treiber installieren
 
-Before any DMX functions may be called, the DMX driver must be installed. Install the driver by calling `dmx_driver_install()`. This function will allocate the necessary resources for the DMX driver. It instantiates the driver to default DMX timing. The following parameters are passed to this function:
+Bevor DMX-Funktionen aufgerufen werden können, muss der DMX-Treiber installiert werden. Die Installation erfolgt über `dmx_driver_install()`. Diese Funktion reserviert die benötigten Ressourcen und initialisiert den Treiber mit Standard-DMX-Timing. Folgende Parameter werden übergeben:
 
-- The DMX port to use.
-- The DMX configuration to use. The macro `DMX_CONFIG_DEFAULT` can be used to declare a struct with the default configuration.
-- The DMX personalities that the device will use. This is an array of `dmx_personality_t`. If the device does not use any DMX slots this value can be `NULL`.
-- The personality count or 0 if the device does not use any DMX slots. The maximum number of personalities allowed is 255.
+- Der zu verwendende DMX-Port.
+- Die zu verwendende DMX-Konfiguration. Mit dem Makro `DMX_CONFIG_DEFAULT` kann eine Struktur mit Standardwerten deklariert werden.
+- Die DMX-Personalities des Geräts als Array vom Typ `dmx_personality_t`. Wenn das Gerät keine DMX-Slots nutzt, kann dieser Wert `NULL` sein.
+- Die Anzahl der Personalities oder 0, wenn das Gerät keine DMX-Slots nutzt. Maximal sind 255 Personalities zulässig.
 
 ```c
 dmx_config_t config = DMX_CONFIG_DEFAULT;
@@ -273,18 +289,18 @@ const int personality_count = 4;
 dmx_driver_install(DMX_NUM_1, &config, personalities, personality_count);
 ```
 
-The `dmx_config_t` sets permanent configuration values within the DMX driver. These values are used to configure the DMX device and for the RDM responder. The fields in the `dmx_config_t` include:
+`dmx_config_t` setzt dauerhafte Konfigurationswerte im DMX-Treiber. Diese Werte werden für die DMX-Gerätekonfiguration und den RDM-Responder genutzt. Zu den Feldern von `dmx_config_t` gehören:
 
-- `interrupt_flags` The interrupt allocation flags to use. The default value is `DMX_INTR_FLAGS_DEFAULT`.
-- `root_device_parameter_count` The number of parameters that the root device supports. This is the number of parameters that may be registered on the root device. The default value is `32`.
-- `sub_device_parameter_count` The number of parameters that the sub-devices support. This is the number of parameters that may be registered per sub-device. The default value is `0`.
-- `model_id` This field identifies the device model ID of the root device. This is an arbitrary value set by the user to uniquely identify different models of RDM devices made by a single manufacturer from one another. The default value is `0`.
-- `product_category` Devices shall report a product category based on the product's primary function. The product categories are enumerated in `product_category_t`. The default value is `RDM_PRODUCT_CATEGORY_FIXTURE`.
-- `software_version_id` This field indicates the software version ID for the device. The software version ID is a 32-bit value determined by the manufacturer. The default value is based on the current version of *esp_dmx*.
-- `software_version_label` This RDM parameter is used to get a descriptive ASCII text label for the device's operating software version. The descriptive text returned by this parameter is intended for display to the user. The default value is a string based on the current version of *esp_dmx*.
-- `queue_size_max` The maximum size of the RDM queue. Setting this value to 0 disables the RDM queue. The default value is `32`.
+- `interrupt_flags`: Zu verwendende Interrupt-Flags. Standardwert: `DMX_INTR_FLAGS_DEFAULT`.
+- `root_device_parameter_count`: Anzahl der vom Root-Gerät unterstützten Parameter. Das ist die Anzahl registrierbarer Parameter auf dem Root-Gerät. Standardwert: `32`.
+- `sub_device_parameter_count`: Anzahl der von Subgeräten unterstützten Parameter. Das ist die Anzahl registrierbarer Parameter pro Subgerät. Standardwert: `0`.
+- `model_id`: Modell-ID des Root-Geräts. Ein frei wählbarer Wert, um unterschiedliche Modelle eines Herstellers eindeutig zu unterscheiden. Standardwert: `0`.
+- `product_category`: Geräte melden eine Produktkategorie entsprechend ihrer Hauptfunktion. Die Kategorien sind in `product_category_t` aufgeführt. Standardwert: `RDM_PRODUCT_CATEGORY_FIXTURE`.
+- `software_version_id`: Softwareversions-ID des Geräts. Diese 32-Bit-ID wird vom Hersteller festgelegt. Standardwert basiert auf der aktuellen *esp_dmx*-Version.
+- `software_version_label`: Dieses RDM-Parameter liefert ein beschreibendes ASCII-Textlabel der laufenden Softwareversion. Der Text ist für die Benutzeranzeige gedacht. Standardwert ist ein String basierend auf der aktuellen *esp_dmx*-Version.
+- `queue_size_max`: Maximale Größe der RDM-Queue. Der Wert 0 deaktiviert die RDM-Queue. Standardwert: `32`.
 
-The `dmx_personality_t` type is a struct which contains two fields: `footprint` and `description`. The `footprint` field is the DMX footprint of the personality. This is the number of DMX slots which this footprint uses. The `description` field is a string which describes the purpose of the DMX personality. This field is used for RDM responses and may be up to 33 characters long including a null-terminator.
+Der Typ `dmx_personality_t` ist eine Struktur mit zwei Feldern: `footprint` und `description`. `footprint` ist der DMX-Footprint der Personality, also die Anzahl der verwendeten DMX-Slots. `description` ist ein String, der den Zweck der DMX-Personality beschreibt. Dieses Feld wird für RDM-Antworten verwendet und darf inklusive Nullterminator bis zu 33 Zeichen lang sein.
 
 ```c
 dmx_config_t config = {
@@ -300,18 +316,20 @@ dmx_config_t config = {
 dmx_driver_install(DMX_NUM_1, &config, personalities, personality_count);
 ```
 
-### Setting Communication Pins
+<a id="setting-communication-pins"></a>
+### Kommunikations-Pins festlegen
 
-After the DMX driver is installed, users can configure the physical GPIO pins to which the DMX port will be connected. To do this, call the function `dmx_set_pin()` and specify which GPIO should be connected to the TX, RX, and RTS signals. If you want to keep a currently allocated pin to a specific signal, pass the macro `DMX_PIN_NO_CHANGE`. This macro should also be used if a pin isn't used.
+Nach der Installation des DMX-Treibers können die physischen GPIO-Pins konfiguriert werden, mit denen der DMX-Port verbunden wird. Rufe dazu `dmx_set_pin()` auf und gib an, welche GPIOs den Signalen TX, RX und RTS zugeordnet werden. Soll ein bereits belegter Pin für ein Signal unverändert bleiben, übergib das Makro `DMX_PIN_NO_CHANGE`. Dieses Makro sollte auch verwendet werden, wenn ein Pin nicht genutzt wird.
 
 ```c
 // Set TX: GPIO16 (port 2 default), RX: GPIO17 (port 2 default), RTS: GPIO21.
 dmx_set_pin(DMX_NUM_1, DMX_PIN_NO_CHANGE, DMX_PIN_NO_CHANGE, 21);
 ```
 
-### Timing Configuration
+<a id="timing-configuration"></a>
+### Timing-Konfiguration
 
-In most situations it is not necessary to adjust the default timing of the DMX driver. Nevertheless, this library allows for individual configuration of the DMX baud rate, break, and mark-after-break for the DMX controller. These functions have no effect when receiving DMX; they only effect the baud rate, break, and mark-after-break when sending DMX or RDM. After the DMX driver has been installed, the following functions may be called.
+In den meisten Situationen ist es nicht nötig, das Standard-Timing des DMX-Treibers anzupassen. Dennoch erlaubt diese Bibliothek eine individuelle Konfiguration von DMX-Baudrate, Break und Mark-After-Break für den DMX-Controller. Diese Funktionen wirken nicht beim Empfang von DMX; sie beeinflussen Baudrate, Break und Mark-After-Break nur beim Senden von DMX oder RDM. Nach der Treiberinstallation können folgende Funktionen aufgerufen werden.
 
 ```c
 dmx_set_baud_rate(DMX_NUM_1, DMX_BAUD_RATE);     // Set DMX baud rate.
@@ -319,19 +337,21 @@ dmx_set_break_len(DMX_NUM_1, DMX_BREAK_LEN_US);  // Set DMX break length.
 dmx_set_mab_len(DMX_NUM_1, DMX_MAB_LEN_US);      // Set DMX MAB length.
 ```
 
-If timing values that are not within the DMX specification are passed to these functions, the values will be clamped so that they are within DMX specification. Note that it is possible to set driver timing to be within DMX specification but not within RDM specification. Care must be used when using these functions to ensure that RDM capabilities are maintained.
+Werden Timing-Werte außerhalb der DMX-Spezifikation übergeben, werden sie auf gültige DMX-Werte begrenzt. Beachte, dass Werte innerhalb der DMX-Spezifikation trotzdem außerhalb der RDM-Spezifikation liegen können. Die Funktionen sollten daher mit Bedacht genutzt werden, damit RDM-Fähigkeit erhalten bleibt.
 
-The above functions each have `_get_` counterparts to retrieve the currently set DMX timing parameters.
+Die oben genannten Funktionen besitzen jeweils `_get_`-Gegenstücke, um die aktuell gesetzten DMX-Timing-Parameter auszulesen.
 
-## Reading and Writing DMX
+<a id="reading-and-writing-dmx"></a>
+## DMX lesen und schreiben
 
-DMX is a unidirectional protocol. This means that on the DMX bus only one device can transmit commands and many devices listen for commands. Therefore, this library permits either reading or writing to the bus but not both at once. If sending and receiving data concurrently is desired, users can use two UART ports and install a driver on each port.
+DMX ist ein unidirektionales Protokoll. Das bedeutet: Auf dem DMX-Bus kann immer nur ein Gerät senden, während viele Geräte zuhören. Daher erlaubt diese Bibliothek entweder Lesen oder Schreiben auf dem Bus, aber nicht beides gleichzeitig. Wenn gleichzeitiges Senden und Empfangen benötigt wird, können zwei UART-Ports verwendet und auf jedem Port ein Treiber installiert werden.
 
-### Reading DMX
+<a id="reading-dmx"></a>
+### DMX lesen
 
-Reading may be performed synchronously or asynchronously from the DMX bus. It is typically desired to perform reads synchronously. This means that reads are only performed when a new DMX packet is received. This is ideal because it is not commonly desired to perform reads on the same data multiple times.
+Lesen vom DMX-Bus kann synchron oder asynchron erfolgen. Üblicherweise ist synchrones Lesen gewünscht. Dabei wird nur gelesen, wenn ein neues DMX-Paket empfangen wurde. Das ist ideal, weil dieselben Daten normalerweise nicht mehrfach gelesen werden sollen.
 
-To read synchronously from the DMX bus the DMX driver must wait for a new packet. The blocking function `dmx_receive()` can be used for this purpose.
+Für synchrones Lesen vom DMX-Bus muss der DMX-Treiber auf ein neues Paket warten. Dafür kann die blockierende Funktion `dmx_receive()` verwendet werden.
 
 ```c
 dmx_packet_t packet;
@@ -339,20 +359,20 @@ dmx_packet_t packet;
 int packet_size = dmx_receive(DMX_NUM_1, &packet, DMX_TIMEOUT_TICK);
 ```
 
-The function `dmx_receive()` takes three arguments. The first argument is the `dmx_port_t` which identifies which DMX port to use. The second argument is a pointer to a `dmx_packet_t` struct. Data about the received packet is copied into the `dmx_packet_t` struct when a packet is received. This data includes:
+Die Funktion `dmx_receive()` hat drei Argumente. Das erste ist `dmx_port_t` und bestimmt, welcher DMX-Port genutzt wird. Das zweite ist ein Zeiger auf eine `dmx_packet_t`-Struktur. Beim Empfang eines Pakets werden Paketinformationen in diese Struktur kopiert. Dazu gehören:
 
-- `err` reports any errors that occurred while receiving the packet (see: [Error Handling](#error-handling)).
-- `sc` is the start code of the packet.
-- `size` is the size of the packet in bytes, including the DMX start code. This value will never be higher than `DMX_PACKET_SIZE`.
-- `is_rdm` evaluates to true if the packet is an RDM packet and if the RDM checksum is valid.
+- `err` meldet Fehler, die beim Empfang des Pakets aufgetreten sind (siehe: [Fehlerbehandlung](#error-handling)).
+- `sc` ist der Startcode des Pakets.
+- `size` ist die Paketgröße in Bytes inklusive DMX-Startcode. Dieser Wert ist nie größer als `DMX_PACKET_SIZE`.
+- `is_rdm` ist true, wenn das Paket ein RDM-Paket ist und die RDM-Prüfsumme gültig ist.
 
-Using the `dmx_packet_t` struct is optional. If processing DMX or RDM packet data is not desired, users can pass `NULL` in place of a pointer to a `dmx_packet_t` struct.
+Die Verwendung der `dmx_packet_t`-Struktur ist optional. Wenn DMX- oder RDM-Paketdaten nicht verarbeitet werden sollen, kann statt eines Zeigers auf `dmx_packet_t` auch `NULL` übergeben werden.
 
-The `dmx_receive()` function only returns a non-zero value when new data is received. Data is considered "new" when a DMX break is received. DMX data may also be considered "new" when an `RDM_PID_DISC_UNIQUE_BRANCH` response is received since these RDM responses are not sent with a DMX break.
+`dmx_receive()` liefert nur dann einen Wert ungleich null zurück, wenn neue Daten empfangen wurden. Als „neu“ gelten Daten, wenn ein DMX-Break empfangen wurde. Daten können auch bei einer `RDM_PID_DISC_UNIQUE_BRANCH`-Antwort als „neu“ gelten, da diese RDM-Antworten ohne DMX-Break gesendet werden.
 
-The final argument to `dmx_receive()` is the amount of FreeRTOS ticks to block until the function times out. This library defines a constant, `DMX_TIMEOUT_TICK`, which is the length of time that must be waited until the DMX signal is considered lost according to DMX specification. According to DMX specification this constant is equivalent to 1250 milliseconds. If non-blocking behavior is desired, users should set this value to 0.
+Das letzte Argument von `dmx_receive()` ist die Anzahl der FreeRTOS-Ticks, die bis zum Timeout blockiert wird. Diese Bibliothek definiert dafür die Konstante `DMX_TIMEOUT_TICK`, also die Wartezeit, nach der ein DMX-Signal gemäß Spezifikation als verloren gilt. Laut DMX-Spezifikation entspricht das 1250 Millisekunden. Für nicht blockierendes Verhalten sollte dieser Wert auf 0 gesetzt werden.
 
-After a packet is received, `dmx_read()` can be called to read the packet into a user buffer. It is recommended to check for DMX errors before reading data but it is not required.
+Nach dem Paketempfang kann `dmx_read()` aufgerufen werden, um das Paket in einen Nutzerpuffer zu lesen. Es wird empfohlen, vor dem Lesen auf DMX-Fehler zu prüfen, ist aber nicht zwingend erforderlich.
 
 ```c
 uint8_t data[DMX_PACKET_SIZE];
@@ -372,7 +392,7 @@ if (dmx_receive(DMX_NUM_1, &packet, DMX_TIMEOUT_TICK)) {
 }
 ```
 
-The function `dmx_receive_num()` is provided to receive a specified number of DMX slots before returning. This function is identical to `dmx_receive()` except that it provides an additional argument which sets the number of slots to receive. This value is ignored when receiving RDM packets so that `dmx_receive()` and `dmx_receive_num()` will always receive full RDM packets.
+Die Funktion `dmx_receive_num()` empfängt vor der Rückkehr eine festgelegte Anzahl von DMX-Slots. Sie entspricht `dmx_receive()`, bietet aber ein zusätzliches Argument zur Anzahl der zu empfangenden Slots. Beim Empfang von RDM-Paketen wird dieser Wert ignoriert, sodass `dmx_receive()` und `dmx_receive_num()` immer vollständige RDM-Pakete empfangen.
 
 ```c
 dmx_packet_t packet;
@@ -380,9 +400,9 @@ int num_slots_to_receive = 96;
 dmx_receive_num(DMX_NUM_1, &packet, num_slots_to_receive, DMX_TIMEOUT_TICK);
 ```
 
-The function `dmx_receive()` can be viewed as a wrapper for `dmx_receive_num()` where the number of slots to receive is equal to the packet size of the last DMX packet received. When the desired number of slots to receive is greater than the actual number of slots received (e.g. when waiting to receive 513 slots, but only 128 are received) the function will unblock upon receiving the DMX break for the subsequent packet and the `packet.err` will be set to `DMX_ERR_NOT_ENOUGH_SLOTS`.
+`dmx_receive()` kann als Wrapper um `dmx_receive_num()` betrachtet werden, wobei die Anzahl zu empfangender Slots der Paketgröße des zuletzt empfangenen DMX-Pakets entspricht. Ist die gewünschte Slot-Anzahl größer als tatsächlich empfangen (z. B. 513 erwartet, aber nur 128 empfangen), entblockt die Funktion beim DMX-Break des Folgepakets und setzt `packet.err` auf `DMX_ERR_NOT_ENOUGH_SLOTS`.
 
-There are two variations to the `dmx_read()` function. The function `dmx_read_offset()` is similar to `dmx_read()` but allows a small footprint of the entire DMX packet to be read.
+Es gibt zwei Varianten von `dmx_read()`. `dmx_read_offset()` ist ähnlich zu `dmx_read()`, erlaubt aber das Lesen eines Teilbereichs (Footprints) des gesamten DMX-Pakets.
 
 ```c
 const int size = 12;   // The size of this device's DMX footprint.
@@ -393,7 +413,7 @@ uint8_t data[size];
 int num_slots_read = dmx_read_offset(DMX_NUM_1, offset, data, size);
 ```
 
-Lastly, `dmx_read_slot()` can be used to read a single slot of DMX data.
+Zuletzt kann `dmx_read_slot()` verwendet werden, um einen einzelnen DMX-Slot zu lesen.
 
 ```c
 const int slot_num = 0;  // The slot to read. Slot 0 is the DMX start code!
@@ -402,17 +422,18 @@ const int slot_num = 0;  // The slot to read. Slot 0 is the DMX start code!
 int value = dmx_read_slot(DMX_NUM_1, slot_num);
 ```
 
-### DMX Sniffer
+<a id="dmx-sniffer"></a>
+### DMX-Sniffer
 
-This library offers an option to measure DMX break and mark-after-break timings of received data packets. The sniffer is much more resource intensive than the default DMX driver, so it must be explicitly enabled by calling `dmx_sniffer_enable()`.
+Diese Bibliothek bietet die Möglichkeit, Break- und Mark-After-Break-Zeiten empfangener DMX-Pakete zu messen. Der Sniffer ist deutlich ressourcenintensiver als der Standard-DMX-Treiber und muss daher explizit mit `dmx_sniffer_enable()` aktiviert werden.
 
-The DMX sniffer installs an edge-triggered interrupt on the specified GPIO pin. This library uses the ESP-IDF provided GPIO ISR which allows the use of individual interrupt handlers for specific GPIO interrupts. The interrupt handler works by iterating through each GPIO to determine if it triggered an interrupt and if so, it calls the appropriate handler.
+Der DMX-Sniffer installiert einen flankengesteuerten Interrupt auf dem angegebenen GPIO-Pin. Diese Bibliothek nutzt die von ESP-IDF bereitgestellte GPIO-ISR, die individuelle Handler für bestimmte GPIO-Interrupts erlaubt. Der Handler iteriert über alle GPIOs, prüft auf ausgelöste Interrupts und ruft bei Bedarf den passenden Handler auf.
 
-A quirk of the default ESP-IDF GPIO ISR is that lower GPIO numbers are processed earlier than higher GPIO numbers. It is recommended that the DMX read pin be shorted to a lower GPIO number in order to ensure that the DMX sniffer can run with low latency.
+Eine Eigenheit der Standard-ESP-IDF-GPIO-ISR ist, dass niedrigere GPIO-Nummern früher verarbeitet werden als höhere. Es wird empfohlen, den DMX-Lesepin auf eine möglichst niedrige GPIO-Nummer zu legen, damit der DMX-Sniffer mit geringer Latenz laufen kann.
 
-It is important to note that the sniffer requires a fast clock speed in order to maintain low latency. In order to guarantee accuracy of the sniffer, the ESP32 must be set to a CPU clock speed of at least 160MHz. This setting can be configured in `Kconfig` if the ESP-IDF is used.
+Wichtig ist, dass der Sniffer für niedrige Latenz eine hohe Taktfrequenz benötigt. Für eine verlässliche Genauigkeit sollte der ESP32 auf mindestens 160 MHz CPU-Takt eingestellt werden. Diese Einstellung kann bei Nutzung von ESP-IDF in `Kconfig` konfiguriert werden.
 
-Before enabling the sniffer tool, `gpio_install_isr_service()` must be called with the required DMX sniffer interrupt flags. The macro `DMX_SNIFFER_INTR_FLAGS_DEFAULT` can be used to provide the proper interrupt flags.
+Vor dem Aktivieren des Sniffers muss `gpio_install_isr_service()` mit den benötigten DMX-Sniffer-Interrupt-Flags aufgerufen werden. Das Makro `DMX_SNIFFER_INTR_FLAGS_DEFAULT` liefert die passenden Flags.
 
 ```c
 gpio_install_isr_service(DMX_SNIFFER_INTR_FLAGS_DEFAULT);
@@ -421,7 +442,7 @@ const int sniffer_pin = 4; // Lowest exposed pin on the Feather breakout board.
 dmx_sniffer_enable(DMX_NUM_1, sniffer_pin);
 ```
 
-Break and mark-after-break timings are reported to the DMX sniffer when it is enabled. To read data from the DMX sniffer call `dmx_sniffer_get_data()` after a DMX packet is received to copy data into a `dmx_metadata_t` struct. If data is copied, the function will return `true`.
+Break- und Mark-After-Break-Zeiten werden bei aktiviertem Sniffer erfasst. Um Daten auszulesen, rufe nach dem Empfang eines DMX-Pakets `dmx_sniffer_get_data()` auf, um die Daten in eine `dmx_metadata_t`-Struktur zu kopieren. Wenn Daten kopiert wurden, gibt die Funktion `true` zurück.
 
 ```c
 dmx_packet_t packet;
@@ -434,9 +455,10 @@ if (dmx_receive(DMX_NUM_1, &packet, DMX_TIMEOUT_TICK)) {
 }
 ```
 
-### Writing DMX
+<a id="writing-dmx"></a>
+### DMX schreiben
 
-To write to the DMX bus, `dmx_write()` can be called. This writes data to the DMX driver but it does not transmit a packet onto the bus. In order to transmit the data that was written, `dmx_send()` must be called.
+Zum Schreiben auf den DMX-Bus kann `dmx_write()` aufgerufen werden. Das schreibt Daten in den DMX-Treiber, sendet aber noch kein Paket. Um die geschriebenen Daten tatsächlich zu senden, muss `dmx_send()` aufgerufen werden.
 
 ```c
 uint8_t data[DMX_PACKET_SIZE] = { 0, 1, 2, 3 };
@@ -447,7 +469,7 @@ dmx_write(DMX_NUM_1, data, num_bytes_to_write);
 dmx_send(DMX_NUM_1,);
 ```
 
-It takes a typical DMX packet approximately 22 milliseconds to send. During this time, it is possible to write new data to the DMX driver with `dmx_write()` if non-RDM data is being sent. To do so would result in an asynchronous write which may not be desired. To write data synchronously it is required to wait until the DMX packet is finished being sent. The function `dmx_wait_sent()` is used for this purpose.
+Das Senden eines typischen DMX-Pakets dauert etwa 22 Millisekunden. Währenddessen können mit `dmx_write()` bereits neue Daten geschrieben werden, solange keine RDM-Daten gesendet werden. Das führt jedoch zu asynchronem Schreiben, was ggf. unerwünscht ist. Für synchrones Schreiben muss gewartet werden, bis das aktuelle DMX-Paket vollständig gesendet wurde. Dafür dient `dmx_wait_sent()`.
 
 ```c
 uint8_t data[DMX_PACKET_SIZE] = { 0, 1, 2, 3 };
@@ -469,16 +491,16 @@ while (true) {
 }
 ```
 
-When sending DMX, the `dmx_send()` function sends the maximum number of slots allowed by the DMX standard. When an RDM packet is sent using `dmx_send()`, the DMX driver will automatically send only the slots which make up the RDM packet.
+Beim Senden von DMX sendet `dmx_send()` die maximal nach DMX-Standard erlaubte Slot-Anzahl. Wird mit `dmx_send()` ein RDM-Paket gesendet, überträgt der DMX-Treiber automatisch nur die Slots, die dieses RDM-Paket enthält.
 
-To send a specific number of DMX slots, the function `dmx_send_num()` may be used. The number of slots to send is ignored when sending RDM data.
+Um eine bestimmte Anzahl an DMX-Slots zu senden, kann `dmx_send_num()` verwendet werden. Beim Senden von RDM-Daten wird diese Slot-Anzahl ignoriert.
 
 ```c
 const int num_bytes_to_send = 96;
 dmx_send_num(DMX_NUM_1, num_bytes_to_send);
 ```
 
-An offset of DMX slots can be written using `dmx_write_offset()` and individual DMX slots can be written using `dmx_write_slot()`. This behavior is similar to reading an offset of DMX slots or reading a single DMX slot using `dmx_read_offset()` and `dmx_read_slot()`, respectively.
+Ein Bereich von DMX-Slots kann mit `dmx_write_offset()` geschrieben werden, einzelne DMX-Slots mit `dmx_write_slot()`. Das entspricht dem Verhalten von `dmx_read_offset()` und `dmx_read_slot()` beim Lesen.
 
 ```c
 uint8_t data[DMX_PACKET_SIZE] = { 0, 1, 2, 3 };
@@ -496,11 +518,12 @@ dmx_write_slot(DMX_NUM_1, slot_num, value);
 // Don't forget to call dmx_send()!
 ```
 
-### DMX Parameters
+<a id="dmx-parameters"></a>
+### DMX-Parameter
 
-Upon installing the DMX driver, some parameter values are set which may be get or set by the user. These parameters include the current DMX personality, the personality count, the footprint of a specified personality, the description of a personality, and the DMX start address.
+Bei der Installation des DMX-Treibers werden einige Parameterwerte gesetzt, die vom Nutzer gelesen oder geschrieben werden können. Dazu gehören die aktuelle DMX-Personality, die Personality-Anzahl, der Footprint einer gewählten Personality, die Personality-Beschreibung und die DMX-Startadresse.
 
-Getting or setting the DMX start address can be done using `dmx_get_start_address()` and `dmx_set_start_address()`. When RDM is enabled, these functions behave similarly to `rdm_get_dmx_start_address()` and `rdm_set_dmx_start_address()`.
+Das Auslesen oder Setzen der DMX-Startadresse erfolgt über `dmx_get_start_address()` und `dmx_set_start_address()`. Ist RDM aktiviert, verhalten sich diese Funktionen ähnlich zu `rdm_get_dmx_start_address()` und `rdm_set_dmx_start_address()`.
 
 ```c
 // Get the DMX start address and increment it by one
@@ -512,7 +535,7 @@ if (dmx_start_address >= DMX_PACKET_SIZE_MAX) {
 dmx_set_start_address(DMX_NUM_1, dmx_start_address);
 ```
 
-Personalities, the personality count, personality descriptions, and footprint sizes may be accessed with `dmx_get_current_personality()`, `dmx_set_current_personality()`, `dmx_get_personality_count()`, `dmx_get_personality_description()`, and `dmx_get_footprint()`. Personalities are indexed starting at one. There is no personality zero.
+Auf Personalities, Personality-Anzahl, Personality-Beschreibungen und Footprint-Größen kann mit `dmx_get_current_personality()`, `dmx_set_current_personality()`, `dmx_get_personality_count()`, `dmx_get_personality_description()` und `dmx_get_footprint()` zugegriffen werden. Personalities sind ab 1 indiziert; eine Personality 0 gibt es nicht.
 
 ```c
 const uint8_t personality_count = dmx_get_personality_count(DMX_NUM_1);
@@ -536,9 +559,10 @@ if (current_personality < personality_count) {
 }
 ```
 
-## Reading and Writing RDM
+<a id="reading-and-writing-rdm"></a>
+## RDM lesen und schreiben
 
-Using only the functions listed above it is possible to send and receive RDM packets. When an RDM packet is written using `dmx_write()` the DMX driver will respond accordingly and ensure that RDM timing requirements are met. For example, calls to `dmx_send()` and `dmx_send_num()` typically send a DMX break and mark-after-break when sending a DMX packet with a null start code. When sending an RDM discovery response packet the DMX driver automatically removes the DMX break and mark-after-break which is required per the RDM standard. Sending RDM responses with `dmx_send()` or `dmx_send_num()` may also fail when the DMX driver has detected that the RDM response timeout has already elapsed. This is done to reduce the number of data collisions on the RDM bus and keeps the RDM bus operating properly.
+Bereits mit den oben genannten Funktionen können RDM-Pakete gesendet und empfangen werden. Wird ein RDM-Paket mit `dmx_write()` geschrieben, reagiert der DMX-Treiber entsprechend und stellt sicher, dass RDM-Timing-Anforderungen eingehalten werden. Beispielsweise senden `dmx_send()` und `dmx_send_num()` bei einem DMX-Paket mit Null-Startcode üblicherweise DMX-Break und Mark-After-Break. Beim Senden eines RDM-Discovery-Antwortpakets entfernt der DMX-Treiber Break und Mark-After-Break automatisch gemäß RDM-Standard. Das Senden von RDM-Antworten mit `dmx_send()` oder `dmx_send_num()` kann außerdem fehlschlagen, wenn der Treiber erkennt, dass das RDM-Antwort-Timeout bereits abgelaufen ist. Das reduziert Datenkollisionen auf dem RDM-Bus und hält den Bus stabil.
 
 ```c
 // This is a hard-coded discovery response packet.
@@ -552,7 +576,7 @@ dmx_write(DMX_NUM_1, discovery_response, sizeof(discovery_response));
 dmx_send(DMX_NUM_1);
 ```
 
-Likewise, the `dmx_receive()` functions behave contextually when receiving DMX or RDM packets. When receiving DMX, calls to `dmx_receive()` and `dmx_receive_num()` will timeout according to the timeout value provided, such as `DMX_TIMEOUT_TICK`. When receiving RDM packets, the DMX driver may timeout much more quickly than the provided timeout value as the RDM bus turnaround times are much shorter than DMX.
+Ebenso verhalten sich die `dmx_receive()`-Funktionen kontextabhängig beim Empfang von DMX- oder RDM-Paketen. Beim DMX-Empfang greifen `dmx_receive()` und `dmx_receive_num()` gemäß übergebenem Timeout (z. B. `DMX_TIMEOUT_TICK`). Beim Empfang von RDM-Paketen kann der Treiber deutlich früher aussteigen, da die Umschaltzeiten auf dem RDM-Bus wesentlich kürzer sind als bei DMX.
 
 ```c
 // This is a hard-coded GET DEVICE_INFO request.
@@ -569,15 +593,16 @@ dmx_packet_t packet;
 dmx_receive(DMX_NUM_1, &packet, DMX_TIMEOUT_TICK);  // Unblocks in 3ms
 ```
 
-Because writing RDM requests and responses in this way can be cumbersome, this library provides functions for sending RDM requests and responses. They can be included by adding `#include "rdm/controller.h"` for requests and `#include "rdm/responder.h"` for responses.
+Da das Schreiben von RDM-Anfragen und -Antworten auf diese Weise aufwendig sein kann, stellt die Bibliothek spezielle Funktionen dafür bereit. Diese werden über `#include "rdm/controller.h"` für Anfragen und `#include "rdm/responder.h"` für Antworten eingebunden.
 
-### RDM Requests
+<a id="rdm-requests"></a>
+### RDM-Anfragen
 
-This library supports the required PIDs specified in the RDM standard. Request functions in this library are named using the prefix `rdm_send_`, whether the request is a GET or a SET, and the parameter name. To GET the `RDM_PID_DEVICE_INFO` of a responder device, users can call `rdm_send_get_device_info()`. To SET a device's `RDM_PID_DMX_START_ADDRESS`, users can call `rdm_send_set_dmx_start_address()`. All GET request functions return `true` if an `RDM_RESPONSE_TYPE_ACK` was received or `false` if an `RDM_RESPONSE_TYPE_ACK` was not received. All SET request functions return the number of bytes received in the RDM parameter data if an `RDM_RESPONSE_TYPE_ACK` was received or 0 otherwise. For example `rdm_send_get_software_version_label()` will return the number of characters in the software version label that was received in the RDM response packet.
+Diese Bibliothek unterstützt die im RDM-Standard geforderten PIDs. Anfragefunktionen sind nach dem Muster Präfix `rdm_send_`, GET/SET-Typ und Parametername benannt. Um z. B. `RDM_PID_DEVICE_INFO` eines Responders per GET anzufragen, kann `rdm_send_get_device_info()` aufgerufen werden. Um `RDM_PID_DMX_START_ADDRESS` eines Geräts per SET zu setzen, kann `rdm_send_set_dmx_start_address()` verwendet werden. Alle GET-Funktionen liefern `true`, wenn `RDM_RESPONSE_TYPE_ACK` empfangen wurde, sonst `false`. Alle SET-Funktionen liefern bei `RDM_RESPONSE_TYPE_ACK` die Anzahl empfangener Bytes in den RDM-Parameterdaten, sonst 0. So liefert `rdm_send_get_software_version_label()` z. B. die Anzahl Zeichen des empfangenen Softwareversionslabels.
 
-In addition to the DMX port number most RDM request functions use at least two arguments to determine where the RDM request should be directed. These arguments are `dest_uid`, the destination UID and `sub_device` the RDM sub-device which should receive the request.
+Zusätzlich zur DMX-Portnummer verwenden die meisten RDM-Anfragefunktionen mindestens zwei Argumente, um das Ziel der Anfrage festzulegen: `dest_uid` (Ziel-UID) und `sub_device` (RDM-Subgerät, das die Anfrage empfangen soll).
 
-When printing UIDs to the terminal, the macros `UIDSTR` and `UID2STR()` can be used in printf-like functions.
+Beim Ausgeben von UIDs im Terminal können in printf-ähnlichen Funktionen die Makros `UIDSTR` und `UID2STR()` verwendet werden.
 
 ```c
 rdm_uid_t dest_uid = {0x05e0, 0x44c06fbf};  // The destination UID
@@ -599,24 +624,25 @@ if (rdm_send_set_dmx_start_address(DMX_NUM_1, &dest_uid, sub_device,
 }
 ```
 
-Response information from requests is read into a `rdm_ack_t` pointer which is provided by the user. Users can use this type to ensure that requests were successful and, if they are not successful, handle errors. The `rdm_ack_t` type contains the following fields:
+Antwortinformationen aus Anfragen werden in einen vom Nutzer bereitgestellten `rdm_ack_t`-Zeiger geschrieben. Mit diesem Typ kann geprüft werden, ob Anfragen erfolgreich waren, und bei Fehlern entsprechend reagiert werden. `rdm_ack_t` enthält folgende Felder:
 
-- `err` is set to a non-zero error value if an error occurred reading DMX data. This field only indicates if an error occurred reading raw DMX data. It does not indicate if an invalid RDM packet was received. More information on error handling can be found in the [Error Handling](#error-handling) section.
-- `size` is the size of the received packet, including start code, RDM sub-start code, and checksum.
-- `src_uid` is the UID of the device originating the response packet.
-- `pid` is the PID of the response packet. This is typically the same as the PID which was sent in the request, but may differ for some requests.
-- `type` is the type of the RDM response received. It can be any of the RDM response types enumerated in [Response Types](#response-types).
-- `message_count` is used by an RDM responder to indicate that additional data is now available for collection by a controller.
+- `err` wird auf einen Fehlerwert ungleich null gesetzt, wenn beim Lesen von DMX-Daten ein Fehler auftrat. Dieses Feld zeigt nur Fehler beim Lesen roher DMX-Daten an, nicht den Empfang ungültiger RDM-Pakete. Mehr dazu im Abschnitt [Fehlerbehandlung](#error-handling).
+- `size` ist die Größe des empfangenen Pakets inklusive Startcode, RDM-Sub-Startcode und Prüfsumme.
+- `src_uid` ist die UID des Geräts, das das Antwortpaket gesendet hat.
+- `pid` ist die PID des Antwortpakets. Sie ist in der Regel identisch mit der in der Anfrage gesendeten PID, kann bei manchen Anfragen aber abweichen.
+- `type` ist der Typ der empfangenen RDM-Antwort. Er kann jeder der in [Antworttypen](#response-types) aufgeführten RDM-Antworttypen sein.
+- `message_count` wird vom RDM-Responder genutzt, um anzuzeigen, dass zusätzliche Daten zur Abholung durch einen Controller bereitstehen.
 
-The remaining field is a union which should be read depending on the value in `type`.
+Das verbleibende Feld ist eine Union und sollte abhängig vom Wert in `type` gelesen werden.
 
-- `pdl` should be read if `type` evaluates to `RDM_RESPONSE_TYPE_ACK`. It describes the size of the RDM parameter data that was received.
-- `timer` should be read if `type` evaluates to `RDM_RESPONSE_TYPE_TIMER`. It describes the number of FreeRTOS ticks that must elapse before the RDM responder will be ready to process the request.
-- `nack_reason` should be read if `type` evaluates to `RDM_RESPONSE_TYPE_NACK_REASON`. It describes the NACK reason code that was received from the RDM responder.
+- `pdl` sollte gelesen werden, wenn `type` den Wert `RDM_RESPONSE_TYPE_ACK` hat. Es beschreibt die Größe der empfangenen RDM-Parameterdaten.
+- `timer` sollte gelesen werden, wenn `type` den Wert `RDM_RESPONSE_TYPE_TIMER` hat. Es beschreibt die Anzahl FreeRTOS-Ticks, die vergehen müssen, bis der RDM-Responder die Anfrage verarbeiten kann.
+- `nack_reason` sollte gelesen werden, wenn `type` den Wert `RDM_RESPONSE_TYPE_NACK_REASON` hat. Es beschreibt den vom RDM-Responder empfangenen NACK-Grundcode.
 
-### Discovering Devices
+<a id="discovering-devices"></a>
+### Geräte entdecken
 
-This library provides two functions for performing full RDM discovery. The function `rdm_discover_devices_simple()` is provided as a simple implementation of the discovery algorithm which takes a pointer to an array of UIDs to store discovered UIDs and returns the number of UIDs found.
+Diese Bibliothek bietet zwei Funktionen für eine vollständige RDM-Discovery. `rdm_discover_devices_simple()` ist eine einfache Implementierung des Discovery-Algorithmus. Sie erhält einen Zeiger auf ein UID-Array zur Ablage gefundener UIDs und gibt die Anzahl gefundener UIDs zurück.
 
 ```c
 const int array_size = 10;
@@ -628,9 +654,9 @@ int num_uids = rdm_discover_devices_simple(DMX_NUM_1, uids, array_size);
 printf("Discovery found %i UIDs!\n", num_uids);
 ```
 
-Discovery can take several seconds to complete. Users may want to perform an action, such as update a progress bar, whenever a new UID is found. When this is desired, the function `rdm_discover_with_callback()` may be used to specify a callback function which is called when a new UID is discovered.
+Die Geräteerkennung kann mehrere Sekunden dauern. Oft soll bei jeder neu gefundenen UID eine Aktion ausgeführt werden, z. B. das Aktualisieren einer Fortschrittsanzeige. Dafür kann `rdm_discover_with_callback()` verwendet werden, um eine Callback-Funktion anzugeben, die bei jeder neu gefundenen UID aufgerufen wird.
 
-`RDM_PID_DISC_UNIQUE_BRANCH` requests support neither GET nor SET. This PID request can be accessed with the function `rdm_send_disc_unique_branch()`. `RDM_PID_DISC_UNIQUE_BRANCH` requests may only be sent to the root device, and may only be addressed to all devices on the RDM network. Therefore, the `dest_uid` and `sub_device` arguments are not provided for this function.
+`RDM_PID_DISC_UNIQUE_BRANCH` unterstützt weder GET noch SET. Diese PID-Anfrage wird über `rdm_send_disc_unique_branch()` gesendet. `RDM_PID_DISC_UNIQUE_BRANCH` darf nur an das Root-Gerät und nur als Adresse an alle Geräte im RDM-Netzwerk gesendet werden. Deshalb gibt es für diese Funktion keine Argumente `dest_uid` und `sub_device`.
 
 ```c
 rdm_ack_t ack;
@@ -660,7 +686,7 @@ if (ack.size > 0) {
 }
 ```
 
-`RDM_PID_DISC_MUTE` and `RDM_PID_DISC_UN_MUTE` similarly do not support GET nor SET. Devices may be muted and un-muted by using the functions `rdm_send_disc_mute()` and `rdm_send_disc_un_mute()`. These requests may be sent to any destination UID but may only be sent to the root device. The `dest_uid` argument is provided, but `sub_device` is not. `RDM_PID_DISC_MUTE` and `RDM_PID_DISC_UN_MUTE` requests receive the same response data from responders. Therefore `rdm_disc_mute_t` can be used to store parameter data from responder devices for both requests.
+`RDM_PID_DISC_MUTE` und `RDM_PID_DISC_UN_MUTE` unterstützen ebenfalls weder GET noch SET. Geräte können mit `rdm_send_disc_mute()` und `rdm_send_disc_un_mute()` gemutet bzw. entmutet werden. Diese Anfragen dürfen an jede Ziel-UID gesendet werden, aber nur an das Root-Gerät. Daher gibt es das Argument `dest_uid`, aber kein `sub_device`. Beide Anfragen liefern dieselben Antwortdaten, deshalb kann `rdm_disc_mute_t` für beide zum Speichern der Parameterdaten verwendet werden.
 
 ```c
 rdm_uid_t dest_uid = RDM_UID_BROADCAST_ALL;
@@ -677,11 +703,12 @@ if (ack.size > 0) {
 }
 ```
 
-### RDM Responder
+<a id="rdm-responder"></a>
+### RDM-Responder
 
-An RDM responder must respond to every non-discovery, non-broadcast packet addressed to it. When a responder receives a `RDM_PID_DISC_UNIQUE_BRANCH` packet, it must respond to the packet if the responder's UID falls within the request's address space and if the responder is un-muted.
+Ein RDM-Responder muss auf jedes an ihn adressierte Nicht-Discovery- und Nicht-Broadcast-Paket antworten. Wenn ein Responder ein `RDM_PID_DISC_UNIQUE_BRANCH`-Paket erhält, muss er antworten, wenn seine UID im angefragten Adressraum liegt und er nicht gemutet ist.
 
-The DMX driver will parse RDM requests and send responses within the `rdm_send_response()` function. It is therefore required for all RDM responders to receive RDM requests with `dmx_receive()` or `dmx_receive_num()` and for responses to be sent with `rdm_send_response()`. If `rdm_send_response()` is not called, an RDM response will not be sent. If it is not desired for devices to respond to RDM requests the `rdm_send_response()` function may be omitted. To ensure responder devices are RDM compliant, users should call `rdm_send_response()` after receiving every RDM request.
+Der DMX-Treiber parst RDM-Anfragen und sendet Antworten innerhalb von `rdm_send_response()`. Daher müssen alle RDM-Responder RDM-Anfragen mit `dmx_receive()` oder `dmx_receive_num()` empfangen und Antworten mit `rdm_send_response()` senden. Wird `rdm_send_response()` nicht aufgerufen, wird keine RDM-Antwort gesendet. Wenn Geräte nicht auf RDM-Anfragen reagieren sollen, kann der Aufruf entfallen. Für RDM-Konformität sollten Nutzer `rdm_send_response()` nach jeder empfangenen RDM-Anfrage aufrufen.
 
 ```c
 dmx_packet_t packet;
@@ -692,7 +719,7 @@ if (dmx_receive(DMX_NUM_1, &packet, DMX_TIMEOUT_TICK)) {
 }
 ```
 
-RDM imposes strict timing requirements on RDM responders. Responders must typically respond to RDM requests within approximately 3 milliseconds. It is important to call `rdm_send_response()` quickly after receiving new RDM data. Users are discouraged from calling lengthy functions (such as printing to the terminal) between calls to `dmx_receive()` and `rdm_send_response()`.
+RDM stellt strenge Timing-Anforderungen an Responder. Typischerweise müssen Antworten innerhalb von etwa 3 Millisekunden erfolgen. Deshalb sollte `rdm_send_response()` schnell nach dem Empfang neuer RDM-Daten aufgerufen werden. Von langen Funktionsaufrufen (z. B. Terminalausgaben) zwischen `dmx_receive()` und `rdm_send_response()` wird abgeraten.
 
 ```c
 dmx_packet_t packet;
@@ -707,11 +734,11 @@ if (dmx_receive(DMX_NUM_1, &packet, DMX_TIMEOUT_TICK)) {
 }
 ```
 
-RDM parameters can be registered with the DMX driver using functions prefixed with `rdm_register_`. The parameter `RDM_PID_DMX_START_ADDRESS` may therefore be registered with `rdm_register_dmx_start_address()`. Parameter data is owned and initialized by the DMX driver, but users may set the initial value for some parameters using the arguments to the `rdm_register_` functions.
+RDM-Parameter können beim DMX-Treiber über Funktionen mit dem Präfix `rdm_register_` registriert werden. Der Parameter `RDM_PID_DMX_START_ADDRESS` wird z. B. mit `rdm_register_dmx_start_address()` registriert. Parameterdaten werden vom DMX-Treiber verwaltet und initialisiert, aber Nutzer können für einige Parameter Initialwerte über die Argumente der `rdm_register_`-Funktionen setzen.
 
-RDM parameters which support GET but do not support SET generally allow users to set the parameter's initial value as the second argument of the `rdm_register_` function. The initial value is set the first time the `rdm_register_` function is called and then the initial value argument is subsequently ignored and may be left `NULL`. RDM parameters which support GET and SET will generally be set to a predefined initial value upon registration and must be manually changed using their corresponding `rdm_set_` function.
+RDM-Parameter, die GET aber nicht SET unterstützen, erlauben in der Regel das Setzen des Initialwerts als zweites Argument der `rdm_register_`-Funktion. Dieser Initialwert wird beim ersten Aufruf gesetzt; danach wird das Argument ignoriert und kann `NULL` bleiben. Parameter mit GET und SET erhalten bei der Registrierung meist einen vordefinierten Initialwert und müssen über die entsprechende `rdm_set_`-Funktion manuell geändert werden.
 
-The `rdm_register_` functions allow allow users to attach callback functions to PIDs. When a valid request for a parameter is received, the DMX driver will call the callback function after a request is processed. When a callback is called it does not necessarily mean that a response packet has been sent.
+Mit den `rdm_register_`-Funktionen können Nutzer Callback-Funktionen an PIDs hängen. Wenn eine gültige Anfrage für einen Parameter eingeht, ruft der DMX-Treiber die Callback-Funktion nach der Verarbeitung der Anfrage auf. Ein Callback-Aufruf bedeutet nicht zwingend, dass bereits ein Antwortpaket gesendet wurde.
 
 ```c
 void custom_callback(dmx_port_t dmx_num, rdm_header_t *request,
@@ -722,7 +749,7 @@ void custom_callback(dmx_port_t dmx_num, rdm_header_t *request,
 }
 ```
 
-The arguments in the callback function reflect the RDM header received in the RDM request and the RDM header sent in the response. The DMX port number and a user context is also provided.
+Die Argumente der Callback-Funktion entsprechen dem in der Anfrage empfangenen RDM-Header und dem in der Antwort gesendeten RDM-Header. Zusätzlich werden die DMX-Portnummer und ein Benutzerkontext übergeben.
 
 ```c
 void *context = NULL;  // Context not needed for the above callback 
@@ -733,9 +760,9 @@ if (rdm_register_software_version_label(DMX_NUM_1, new_software_label,
 }
 ```
 
-If a request for a PID that is not registered is received, the DMX driver will automatically respond with an `RDM_RESPONSE_NACK_REASON` response citing `RDM_NR_UNKNOWN_PID`. Registering a parameters which is already defined will overwrite the previously registered callback, but not the initial parameter value. Parameters which are registered cannot be unregistered.
+Wenn eine Anfrage für eine nicht registrierte PID empfangen wird, antwortet der DMX-Treiber automatisch mit `RDM_RESPONSE_NACK_REASON` und `RDM_NR_UNKNOWN_PID`. Wird ein bereits definierter Parameter erneut registriert, wird der zuvor registrierte Callback überschrieben, nicht jedoch der Initialwert. Registrierte Parameter können nicht wieder deregistriert werden.
 
-The RDM standard defines several parameter responses that are required by all RDM compliant responders. These functions are automatically registered when the DMX driver is installed. This is needed to ensure that RDM responders created with this library are compliant with the RDM specification. The following parameters are required per the RDM specification and are therefore automatically registered when installing the DMX driver:
+Der RDM-Standard definiert mehrere Parameterantworten, die von allen RDM-konformen Respondern unterstützt werden müssen. Diese Funktionen werden bei der Installation des DMX-Treibers automatisch registriert. So wird sichergestellt, dass mit dieser Bibliothek erstellte RDM-Responder der RDM-Spezifikation entsprechen. Folgende Parameter sind laut RDM-Spezifikation erforderlich und werden daher automatisch registriert:
 
 - `RDM_PID_DISC_UNIQUE_BRANCH`
 - `RDM_PID_DISC_MUTE`
@@ -743,21 +770,21 @@ The RDM standard defines several parameter responses that are required by all RD
 - `RDM_PID_DEVICE_INFO`
 - `RDM_PID_SOFTWARE_VERSION_LABEL`
 - `RDM_PID_IDENTIFY_DEVICE`
-- `RDM_PID_DMX_START_ADDRESS` if the device uses a DMX slot.
-- `RDM_PID_SUPPORTED_PARAMETERS` if supporting parameters beyond the minimum required set.
-- `RDM_PID_PARAMETER_DESCRIPTION` if supporting manufacturer-specific parameters.
+- `RDM_PID_DMX_START_ADDRESS`, wenn das Gerät einen DMX-Slot verwendet.
+- `RDM_PID_SUPPORTED_PARAMETERS`, wenn Parameter über den minimal erforderlichen Satz hinaus unterstützt werden.
+- `RDM_PID_PARAMETER_DESCRIPTION`, wenn herstellerspezifische Parameter unterstützt werden.
 
-The following parameters are not required by the RDM specification but are automatically registered when installing the DMX driver. Parameters are registered in the following order, if there is parameter space available on the DMX driver:
+Die folgenden Parameter sind laut RDM-Spezifikation nicht erforderlich, werden aber bei der Installation des DMX-Treibers automatisch registriert. Die Registrierung erfolgt in folgender Reihenfolge, sofern im DMX-Treiber ausreichend Parameterspeicher vorhanden ist:
 
-- `RDM_PID_QUEUED_MESSAGE` if specified in the `dmx_config_t`.
+- `RDM_PID_QUEUED_MESSAGE`, sofern in `dmx_config_t` angegeben.
 - `RDM_PID_MANUFACTURER_LABEL`
-- `RDM_PID_DMX_PERSONALITY` if the device uses a DMX slot.
-- `RDM_PID_DMX_PERSONALITY_DESCRIPTION` if the device uses a DMX slot.
+- `RDM_PID_DMX_PERSONALITY`, wenn das Gerät einen DMX-Slot verwendet.
+- `RDM_PID_DMX_PERSONALITY_DESCRIPTION`, wenn das Gerät einen DMX-Slot verwendet.
 - `RDM_PID_DEVICE_LABEL`
 
-Parameters which are registered may be get or set using getter and setter functions. Parameters which support the `RDM_CC_GET_COMMAND` command class have a getter function prefixed prefixed with `rdm_get_` and parameters which support `RDM_CC_SET_COMMAND` have a setter function prefixed with `rdm_set_`. Setter functions return `true` if the value was successfully set. Getter functions return the size of the parameter data in bytes or zero on failure.
+Registrierte Parameter können über Getter- und Setter-Funktionen gelesen oder gesetzt werden. Parameter mit der Command Class `RDM_CC_GET_COMMAND` haben einen Getter mit Präfix `rdm_get_`, Parameter mit `RDM_CC_SET_COMMAND` einen Setter mit Präfix `rdm_set_`. Setter liefern `true`, wenn der Wert erfolgreich gesetzt wurde. Getter liefern die Größe der Parameterdaten in Bytes oder bei Fehler 0.
 
-Some parameters, such as `RDM_PID_DMX_START_ADDRESS` are copied to non-volatile storage to ensure the values are saved after the ESP32 is power-cycled. The values are copied to non-volatile storage when set using the parameter's `rdm_set_` function or after receiving a valid SET request.
+Einige Parameter, z. B. `RDM_PID_DMX_START_ADDRESS`, werden in nichtflüchtigen Speicher kopiert, damit Werte nach einem Neustart des ESP32 erhalten bleiben. Das Kopieren erfolgt beim Setzen über die jeweilige `rdm_set_`-Funktion oder nach dem Empfang einer gültigen SET-Anfrage.
 
 ```c
 uint16_t dmx_start_address;
@@ -771,15 +798,16 @@ if (!rdm_set_dmx_start_address(DMX_NUM_1, dmx_start_address)) {
 }
 ```
 
-## Error Handling
+<a id="error-handling"></a>
+## Fehlerbehandlung
 
-On rare occasions, DMX packets can become corrupted. Errors are typically detected upon initially connecting to an active DMX bus but are resolved on receiving the next packet. Errors can be checked by reading the error code from the `dmx_packet_t` struct. The error types are as follows:
+In seltenen Fällen können DMX-Pakete beschädigt sein. Fehler werden typischerweise direkt nach dem Verbinden mit einem aktiven DMX-Bus erkannt und mit dem nächsten Paket wieder behoben. Fehler lassen sich über den Fehlercode in der Struktur `dmx_packet_t` prüfen. Folgende Fehlertypen gibt es:
 
-- `DMX_OK` indicates data was read successfully.
-- `DMX_ERR_TIMEOUT` indicates that the driver timed out waiting for a packet.
-- `DMX_ERR_IMPROPER_SLOT` occurs when the DMX driver detects missing stop bits. If this condition occurs, the driver shall discard the improperly framed slot data and all following slots in the packet. When this error is reported the `dmx_packet_t` size can be read to determine at which slot the error occurred.
-- `DMX_ERR_UART_OVERFLOW` occurs when the ESP32 hardware overflows resulting in loss of data.
-- `DMX_ERR_NOT_ENOUGH_SLOTS` occurs when the number of slots received is less than the number desired in the call to `dmx_receive_num()`.
+- `DMX_OK` bedeutet, dass Daten erfolgreich gelesen wurden.
+- `DMX_ERR_TIMEOUT` bedeutet, dass der Treiber beim Warten auf ein Paket in einen Timeout gelaufen ist.
+- `DMX_ERR_IMPROPER_SLOT` tritt auf, wenn der DMX-Treiber fehlende Stoppbits erkennt. In diesem Fall verwirft der Treiber den fehlerhaft gerahmten Slot und alle folgenden Slots des Pakets. Bei diesem Fehler kann über `dmx_packet_t.size` ermittelt werden, an welchem Slot der Fehler auftrat.
+- `DMX_ERR_UART_OVERFLOW` tritt auf, wenn die ESP32-Hardware überläuft und dadurch Daten verloren gehen.
+- `DMX_ERR_NOT_ENOUGH_SLOTS` tritt auf, wenn weniger Slots empfangen wurden als in `dmx_receive_num()` angefordert.
 
 ```c
 uint8_t data[DMX_PACKET_SIZE];
@@ -832,52 +860,56 @@ while (true) {
 }
 ```
 
-When reading RDM packets, the `packet.err` field is copied into the `rdm_ack_t` type. It should be noted that RDM packet errors are not reported as errors. The `err` field only reports errors in the processing of raw DMX data. If an invalid RDM packet is received, it will be reported in the `type` field of `rdm_ack_t`. Invalid RDM packets will be reported as `RDM_RESPONSE_TYPE_INVALID`.
+Beim Lesen von RDM-Paketen wird das Feld `packet.err` in den Typ `rdm_ack_t` übernommen. Wichtig: RDM-Paketfehler werden dabei nicht als `err` gemeldet. `err` zeigt nur Fehler bei der Verarbeitung roher DMX-Daten an. Ein ungültiges RDM-Paket wird über das Feld `type` in `rdm_ack_t` gemeldet, und zwar als `RDM_RESPONSE_TYPE_INVALID`.
 
-### Timing Macros
+<a id="timing-macros"></a>
+### Timing-Makros
 
-It should be noted that this library does not automatically check for DMX timing errors. This library does provide macros to assist with timing error checking, but it is left to the user to implement such measures. DMX and RDM each have their own timing requirements so macros for checking DMX and RDM are both provided. The following macros can be used to assist with timing error checking.
+Diese Bibliothek prüft DMX-Timing-Fehler nicht automatisch. Sie stellt jedoch Makros zur Unterstützung bereit; die eigentliche Implementierung solcher Prüfungen liegt beim Nutzer. Da DMX und RDM eigene Timing-Anforderungen haben, gibt es Makros für beide. Folgende Makros helfen bei der Timing-Fehlerprüfung.
 
-- `dmx_baud_rate_is_valid()` evaluates to true if the baud rate is valid for DMX.
-- `dmx_break_len_is_valid()` evaluates to true if the DMX break duration is valid.
-- `dmx_mab_len_is_valid()` evaluates to true if the DMX mark-after-break duration is valid.
-- `rdm_baud_rate_is_valid()` evaluates to true if the baud rate is valid for RDM.
-- `rdm_break_len_is_valid()` evaluates to true if the RDM break duration is valid.
-- `rdm_mab_len_is_valid()` evaluates to true if the RDM mark-after-break duration is valid.
+- `dmx_baud_rate_is_valid()` ergibt true, wenn die Baudrate für DMX gültig ist.
+- `dmx_break_len_is_valid()` ergibt true, wenn die DMX-Break-Dauer gültig ist.
+- `dmx_mab_len_is_valid()` ergibt true, wenn die DMX-Mark-After-Break-Dauer gültig ist.
+- `rdm_baud_rate_is_valid()` ergibt true, wenn die Baudrate für RDM gültig ist.
+- `rdm_break_len_is_valid()` ergibt true, wenn die RDM-Break-Dauer gültig ist.
+- `rdm_mab_len_is_valid()` ergibt true, wenn die RDM-Mark-After-Break-Dauer gültig ist.
 
-DMX and RDM specify different timing requirements for receivers and transmitters. This library attempts to simplify error checking by combining timing requirements for receiving and transmitting. Therefore there are only the above six timing error checking macros instead of six macros each for receiving and transmitting.
+DMX und RDM definieren unterschiedliche Timing-Anforderungen für Empfänger und Sender. Diese Bibliothek vereinfacht die Fehlerprüfung, indem Anforderungen für Senden und Empfangen zusammengefasst werden. Daher gibt es nur die sechs oben genannten Makros statt jeweils sechs separater Makros für Empfang und Übertragung.
 
-### DMX Start Codes
+<a id="dmx-start-codes"></a>
+### DMX-Startcodes
 
-This library offers the following macro constants for use as DMX start codes. More information about each start code can be found in the DMX standards document or in [dmx/include/types.h](src/dmx/include/types.h).
+Diese Bibliothek bietet die folgenden Makro-Konstanten zur Verwendung als DMX-Startcodes. Mehr Informationen zu jedem Startcode findest du im DMX-Standarddokument oder in [dmx/include/types.h](src/dmx/include/types.h).
 
-- `DMX_SC` is the standard DMX null start code.
-- `RDM_SC` is the standard Remote Device Management start code.
-- `DMX_TEXT_SC` is the ASCII text start code.
-- `DMX_TEST_SC` is the test packet start code.
-- `DMX_UTF8_SC` is the UTF-8 text packet start code.
-- `DMX_ORG_ID_SC` is the organization/manufacturer ID start code.
-- `DMX_SIP_SC` is the System Information Packet start code.
+- `DMX_SC` ist der standardmäßige DMX-Null-Startcode.
+- `RDM_SC` ist der standardmäßige Startcode für Remote Device Management.
+- `DMX_TEXT_SC` ist der ASCII-Text-Startcode.
+- `DMX_TEST_SC` ist der Startcode für Testpakete.
+- `DMX_UTF8_SC` ist der Startcode für UTF-8-Textpakete.
+- `DMX_ORG_ID_SC` ist der Startcode für Organisations-/Hersteller-ID.
+- `DMX_SIP_SC` ist der Startcode für System Information Packets.
 
-Additional macro constants include the following:
+Weitere Makro-Konstanten sind:
 
-- `RDM_SUB_SC` is the sub-start code for Remote Device Management. It is the first byte received after the RDM start code.
-- `RDM_PREAMBLE` is not considered a start code but is often the first byte received in an RDM discovery response packet.
-- `RDM_DELIMITER` is not considered a start code but is the delimiter byte received at the end of an RDM discovery response preamble.
+- `RDM_SUB_SC` ist der Sub-Startcode für Remote Device Management. Es ist das erste Byte nach dem RDM-Startcode.
+- `RDM_PREAMBLE` gilt nicht als Startcode, ist aber oft das erste Byte in einem RDM-Discovery-Antwortpaket.
+- `RDM_DELIMITER` gilt nicht als Startcode, ist aber das Trennbyte am Ende einer RDM-Discovery-Antwortpräambel.
 
-Some start codes are considered invalid and should not be used in a DMX packet. The validity of the start code can be checked using the macro `dmx_start_code_is_valid()`. If the start code is valid, this macro will evaluate to true. This library does not automatically check for valid start codes. Such error checking is left to the user to implement.
+Einige Startcodes gelten als ungültig und sollten nicht in DMX-Paketen verwendet werden. Die Gültigkeit eines Startcodes kann mit `dmx_start_code_is_valid()` geprüft werden. Ist der Startcode gültig, ergibt das Makro true. Diese Bibliothek prüft Startcodes nicht automatisch; diese Prüfung muss vom Nutzer implementiert werden.
 
-## Additional Considerations
+<a id="additional-considerations"></a>
+## Weitere Hinweise
 
-### Using Flash or Disabling Cache
+<a id="using-flash-or-disabling-cache"></a>
+### Flash-Nutzung oder Cache deaktivieren
 
-When calling functions that read from or write to flash memory on the ESP32, cache is momentarily disabled and certain interrupts are prevented from firing. This can result in data corruption if the DMX driver is configured improperly.
+Beim Aufruf von Funktionen, die auf dem ESP32 aus dem Flash lesen oder in den Flash schreiben, wird der Cache kurzzeitig deaktiviert und bestimmte Interrupts werden unterdrückt. Ist der DMX-Treiber falsch konfiguriert, kann das zu Datenkorruption führen.
 
-The included `Kconfig` file in this library instructs the ESP32's build system to place the DMX driver and some of its functions into IRAM. This and other configuration options can be disabled using the ESP32's `menuconfig`. The use of `menuconfig` and `Kconfig` files is not supported when using the Arduino framework.
+Die enthaltene `Kconfig`-Datei weist das ESP32-Buildsystem an, den DMX-Treiber und einige seiner Funktionen in IRAM zu platzieren. Diese und weitere Optionen können über `menuconfig` des ESP32 deaktiviert werden. Bei Nutzung des Arduino-Frameworks werden `menuconfig` und `Kconfig` nicht unterstützt.
 
-The DMX driver can be placed in either IRAM or flash memory. The DMX driver and its associated functions are automatically placed in IRAM to reduce the penalty associated with loading code from flash. Placing the DMX driver in flash is acceptable although less performant. When using the Arduino framework, the DMX driver may be placed in flash.
+Der DMX-Treiber kann entweder in IRAM oder im Flash liegen. Standardmäßig werden der Treiber und zugehörige Funktionen in IRAM platziert, um Ladeverzögerungen aus dem Flash zu reduzieren. Die Platzierung im Flash ist möglich, aber weniger performant. Beim Arduino-Framework kann der Treiber im Flash liegen.
 
-When the driver is not placed in IRAM, functions which disable the cache will also temporarily disable the DMX driver. To prevent data corruption, it is required to gracefully disable the DMX driver before cache is disabled. This can be done with `dmx_driver_disable()`. The driver can be reenabled with `dmx_driver_enable()`. The function `dmx_driver_is_enabled()` can be used to check the status of the DMX driver.
+Liegt der Treiber nicht in IRAM, deaktivieren cache-deaktivierende Funktionen auch den DMX-Treiber vorübergehend. Um Datenkorruption zu vermeiden, sollte der DMX-Treiber vor dem Deaktivieren des Caches sauber deaktiviert werden. Das geht mit `dmx_driver_disable()`. Reaktiviert wird er mit `dmx_driver_enable()`. Der Status kann mit `dmx_driver_is_enabled()` geprüft werden.
 
 ```c
 // Disable the DMX driver if it isn't already
@@ -890,122 +922,130 @@ if (dmx_driver_is_enabled(DMX_NUM_1)) {
 dmx_driver_enable(DMX_NUM_1);
 ```
 
-Disabling and reenabling the DMX driver before disabling the cache is not required if the DMX driver is placed in IRAM.
+Das Deaktivieren und erneute Aktivieren des DMX-Treibers vor einer Cache-Deaktivierung ist nicht nötig, wenn der Treiber in IRAM liegt.
 
-### Wiring an RS-485 Circuit
+<a id="wiring-an-rs-485-circuit"></a>
+### RS-485-Schaltung verdrahten
 
-DMX is transmitted over RS-485. RS-485 uses twisted-pair, half-duplex, differential signalling to ensure that data packets can be transmitted over large distances. DMX starts as a UART signal which is then driven using an RS-485 transceiver. Because the ESP32 does not have a built-in RS-485 transceiver, it is required for the ESP32 to be wired to a transceiver in most cases.
+DMX wird über RS-485 übertragen. RS-485 nutzt verdrillte Adernpaare, Halbduplex und differenzielle Signalisierung, damit Datenpakete über größere Distanzen übertragen werden können. DMX beginnt als UART-Signal und wird anschließend über einen RS-485-Transceiver getrieben. Da der ESP32 keinen integrierten RS-485-Transceiver besitzt, muss er in den meisten Fällen extern mit einem Transceiver verbunden werden.
 
-RS-485 transceivers typically have four data input pins: `RO`, `DI`, `DE`, and `/RE`. `RO` is receiver output. It is the pin that the UART RX pin is connected to so that data may be read from other devices to the ESP32. `DI` is driver input. It is connected to the UART TX pin so that data may be written to other devices from the ESP32. `DE` is driver input enable. Bringing this pin high enables the input on the `DI` pin. `/RE` is receiver output enable. The overline on this pin name indicates that it is active when driven low, and inactive when driven high. Driving this pin low enables the input on the `DI` pin.
+RS-485-Transceiver haben typischerweise vier Datenpins: `RO`, `DI`, `DE` und `/RE`. `RO` ist der Empfängerausgang und wird mit UART-RX verbunden, damit Daten von anderen Geräten zum ESP32 gelesen werden können. `DI` ist der Treibereingang und wird mit UART-TX verbunden, damit Daten vom ESP32 an andere Geräte gesendet werden können. `DE` aktiviert den Treiber (active high). `/RE` aktiviert den Empfänger (active low). Der Überstrich bei `/RE` bedeutet: low = aktiv, high = inaktiv.
 
-Because `DE` and `/RE` enable writing and reading respectively, and because `DE` is active high and `/RE` is active low, these pins are often shorted together. In this example, these pins are wired together and are controlled with one pin on the ESP32. This pin is called the enable pin. It can also be referred to as the RTS pin.
+Da `DE` das Senden und `/RE` das Lesen steuert und `DE` active high sowie `/RE` active low ist, werden beide Pins häufig zusammengeschaltet. In diesem Beispiel sind sie verbunden und werden über einen einzigen ESP32-Pin gesteuert. Dieser wird Enable-Pin bzw. auch RTS-Pin genannt.
 
-In this example circuit, R1 and R3 are 680 ohms each. Many RS-485 breakout boards set these resistor values to 20k ohm or higher. Such high resistance values are acceptable and should still allow DMX to be written and read.
+In dieser Beispielschaltung haben R1 und R3 jeweils 680 Ohm. Viele RS-485-Breakout-Boards verwenden hier 20 kOhm oder mehr. Solch hohe Widerstandswerte sind akzeptabel und erlauben in der Regel weiterhin DMX-Schreiben und -Lesen.
 
-R2, the 120 ohm resistor, is a terminating resistor. It is required only when using RDM. Including this resistor in schematics can also ensure system stability when connecting long lines of DMX consisting of multiple devices. If it is decided not to include this resistor, DMX-A and DMX-B should not be shorted together.
+R2, der 120-Ohm-Widerstand, ist ein Abschlusswiderstand. Er ist nur bei RDM zwingend erforderlich. In Schaltplänen kann er außerdem zur Stabilität beitragen, wenn lange DMX-Leitungen mit mehreren Geräten verbunden sind. Wird dieser Widerstand nicht verwendet, dürfen DMX-A und DMX-B nicht kurzgeschlossen werden.
 
-Many RS-485 chips, such as the [Maxim MAX485](https://datasheets.maximintegrated.com/en/ds/MAX1487-MAX491.pdf) are 3.3v tolerant. This means that it can be controlled with the ESP32 without any additional electrical components. Other RS-485 chips may require 5v data to transmit DMX. In this case, it is required to convert the output of the ESP32 to 5v using a logic level converter.
+Viele RS-485-Chips wie der [Maxim MAX485](https://datasheets.maximintegrated.com/en/ds/MAX1487-MAX491.pdf) sind 3,3-V-tolerant. Das bedeutet, sie können ohne zusätzliche Bauteile direkt mit dem ESP32 angesteuert werden. Andere RS-485-Chips benötigen ggf. 5-V-Datenpegel für DMX. In diesem Fall muss der ESP32-Ausgang über einen Pegelwandler auf 5 V umgesetzt werden.
 
-### Hardware Specifications
+<a id="hardware-specifications"></a>
+<a id="hardware"></a>
+### Hardware-Spezifikationen
 
-ANSI-ESTA E1.11 DMX512-A specifies that DMX devices be electrically isolated from other devices on the DMX bus. In the event of a power surge, the likely worse-case scenario would mean the failure of the RS-485 circuitry and not the entire DMX device. Some DMX devices may function without isolation, but using non-isolated equipment is not recommended.
+ANSI-ESTA E1.11 DMX512-A fordert, dass DMX-Geräte elektrisch von anderen Geräten auf dem DMX-Bus isoliert sind. Bei einer Überspannung wäre dann im Worst Case die RS-485-Schaltung betroffen und nicht das gesamte DMX-Gerät. Manche DMX-Geräte funktionieren ohne Isolation, der Einsatz nicht isolierter Hardware wird jedoch nicht empfohlen.
 
 
-## Wireless DMX Build Guide
+<a id="wireless-dmx-build-guide"></a>
+## Bauanleitung für kabelloses DMX
 
-This guide describes how to build a **wireless DMX sender/receiver** using two ESP32 dev boards and two DollaTek 5V MAX485 TTL-to-RS485 modules with XLR-3 connectors.
+Diese Anleitung zeigt Schritt für Schritt, wie du ein **kabelloses DMX-Sender/Empfänger-System** mit zwei ESP32-Boards und zwei DollaTek-5V-MAX485-TTL-zu-RS485-Modulen aufbaust.
 
-This is a **non-isolated** hobby build (good for learning and short cable runs). For stage/production use, add galvanic isolation — see [Isolation Note](#isolation-note).
+Der Aufbau ist **nicht galvanisch getrennt** und damit für Lernen, Tests und kurze Leitungen gedacht. Für Bühne/Veranstaltung nutze bitte die Hinweise unter [Hinweis zur Isolation](#isolation-note).
 
 ### Hardware
 
-| Qty | Item |
+| Anzahl | Bauteil |
 |-----|------|
-| 2 | ESP32 development board |
-| 2 | DollaTek 5V MAX485 TTL-to-RS485 module |
-| 2 | XLR-3 connector (one female for DMX IN, one male for DMX OUT) |
-| 1 | 1.8 kΩ resistor (level-shift divider, sender only) |
-| 1 | 3.3 kΩ resistor (level-shift divider, sender only) |
-| 2 | 0.1 µF ceramic capacitor |
-| 2 | 10 µF electrolytic capacitor |
-| 1 | 120 Ω resistor (termination, receiver) |
+| 2 | ESP32-Entwicklungsboard |
+| 2 | DollaTek 5V MAX485 TTL-zu-RS485 Modul |
+| 2 | XLR-3 Steckverbinder (1x female für DMX IN, 1x male für DMX OUT) |
+| 1 | 1.8 kΩ Widerstand (nur Sender, Spannungsteiler) |
+| 1 | 3.3 kΩ Widerstand (nur Sender, Spannungsteiler) |
+| 2 | 0.1 µF Keramikkondensator |
+| 2 | 10 µF Elektrolytkondensator |
+| 1 | 120 Ω Widerstand (Abschluss, Empfänger) |
 
-### ESP32 Pins
+<a id="esp32-pins"></a>
+### ESP32-Pins
 
-Use **UART2** on both boards:
+Auf beiden Boards wird **UART2** genutzt:
 
-| ESP32 label | GPIO | Purpose |
+| ESP32-Label | GPIO | Zweck |
 |-------------|------|---------|
-| `RX2` | GPIO16 | UART2 receive |
-| `TX2` | GPIO17 | UART2 transmit |
-| `VIN` | — | 5 V supply out |
-| `3V3` | — | 3.3 V supply out |
-| `GND` | — | Ground |
+| `RX2` | GPIO16 | UART2 Empfang |
+| `TX2` | GPIO17 | UART2 Senden |
+| `VIN` | — | 5 V Versorgung ausgeben |
+| `3V3` | — | 3.3 V Versorgung ausgeben |
+| `GND` | — | Masse |
 
-### MAX485 Module Pins
+<a id="max485-module-pins"></a>
+### MAX485-Modul-Pins
 
-The TTL header (top-to-bottom) on the DollaTek board:
+TTL-Stiftleiste (von oben nach unten) am DollaTek-Board:
 
-| Pin | Name | Direction |
+| Pin | Name | Funktion |
 |-----|------|-----------|
-| 1 | VCC | Power in (5 V) |
-| 2 | GND | Ground |
-| 3 | DI | Driver input (TTL TX → RS-485) |
-| 4 | DE | Driver enable (active high) |
-| 5 | RE | Receiver enable (active low) |
-| 6 | RO | Receiver output (RS-485 → TTL RX) |
+| 1 | VCC | Versorgung (5 V) |
+| 2 | GND | Masse |
+| 3 | DI | Treiber-Eingang (TTL TX → RS-485) |
+| 4 | DE | Treiber aktivieren (aktiv high) |
+| 5 | RE | Empfänger aktivieren (aktiv low) |
+| 6 | RO | Empfänger-Ausgang (RS-485 → TTL RX) |
 
-The green screw terminal is the RS-485 bus: **A** and **B**.
+Die grüne Schraubklemme ist der RS-485-Bus mit **A** und **B**.
 
-> A/B labelling can be inconsistent between vendors. If DMX does not work, swap A and B.
+> Die A/B-Beschriftung ist je nach Hersteller unterschiedlich. Wenn nichts funktioniert, A und B tauschen.
 
-### XLR-3 Pinout
+<a id="xlr-3-pinout"></a>
+### XLR-3-Pinbelegung
 
-| XLR-3 pin | Signal |
+| XLR-3 Pin | Signal |
 |-----------|--------|
-| 1 | Shield / Signal ground |
+| 1 | Schirm / Signalmasse |
 | 2 | Data− (DMX−) |
 | 3 | Data+ (DMX+) |
 
-### Sender Box — DMX IN to Wireless
+<a id="sender-box--dmx-in-to-wireless"></a>
+### Senderbox — DMX IN zu Wireless
 
-This box **receives DMX** from a console via a female XLR-3 input, converts it with the MAX485 in **receive mode**, and feeds the data to the ESP32.
+Der Sender liest DMX über eine XLR-3-Buchse ein, setzt den MAX485 auf **Empfang**, und übergibt die Daten an den ESP32.
 
-#### Complete sender wiring map (pin-by-pin)
+#### Komplette Sender-Verdrahtung (Pin für Pin)
 
-| Sender side | Connect to |
+| Sender-Seite | Verbinden mit |
 |-------------|------------|
 | ESP32 `VIN` | MAX485 `VCC` |
 | ESP32 `GND` | MAX485 `GND` |
-| ESP32 `RX2` (GPIO16) | Divider midpoint (between 1.8 kΩ and 3.3 kΩ) |
-| MAX485 `RO` | 1.8 kΩ resistor to divider midpoint |
-| Divider midpoint | 3.3 kΩ resistor to ESP32 `GND` |
+| ESP32 `RX2` (GPIO16) | Mittelpunkt des Teilers (zwischen 1.8 kΩ und 3.3 kΩ) |
+| MAX485 `RO` | 1.8 kΩ Widerstand zum Teiler-Mittelpunkt |
+| Teiler-Mittelpunkt | 3.3 kΩ Widerstand zu ESP32 `GND` |
 | MAX485 `DE` | ESP32 `GND` |
 | MAX485 `RE` | ESP32 `GND` |
-| XLR female pin 1 | ESP32 `GND` and MAX485 bus ground |
-| XLR female pin 2 (Data−) | MAX485 `B` |
-| XLR female pin 3 (Data+) | MAX485 `A` |
+| XLR female Pin 1 | ESP32 `GND` und MAX485 Bus-Masse |
+| XLR female Pin 2 (Data−) | MAX485 `B` |
+| XLR female Pin 3 (Data+) | MAX485 `A` |
 
-#### UART settings (DMX512)
+#### UART-Einstellungen (DMX512)
 
-| Parameter | Value |
+| Parameter | Wert |
 |-----------|-------|
-| Baud rate | 250 000 |
-| Data bits | 8 |
-| Parity | None |
-| Stop bits | 2 |
+| Baudrate | 250 000 |
+| Datenbits | 8 |
+| Parität | Keine |
+| Stoppbits | 2 |
 
-#### Power
+#### Versorgung
 - MAX485 **VCC** → ESP32 **VIN (5 V)**
 - MAX485 **GND** → ESP32 **GND**
 
-#### Mode pins (receive mode — driver disabled, receiver enabled)
+#### Modus-Pins (Empfangsmodus: Treiber aus, Empfänger an)
 - MAX485 **DE** → **GND**
 - MAX485 **RE** → **GND**
 
-#### Data — level-shift RO → RX2
+#### Datenleitung — Pegelanpassung RO → RX2
 
-The MAX485 is powered at 5 V, so its **RO** pin can output ~5 V. The ESP32 GPIO must not exceed **3.3 V**. Use a resistor divider:
+Da MAX485 mit 5 V versorgt wird, kann **RO** bis etwa 5 V ausgeben. ESP32-GPIO darf maximal **3.3 V** sehen. Daher ist ein Spannungsteiler Pflicht:
 
 ```
 MAX485 RO ---[ 1.8 kΩ ]---+--- ESP32 RX2 (GPIO16)
@@ -1018,151 +1058,160 @@ MAX485 RO ---[ 1.8 kΩ ]---+--- ESP32 RX2 (GPIO16)
 - MAX485 **RO** → 1.8 kΩ → **ESP32 RX2 (GPIO16)**
 - ESP32 **RX2 (GPIO16)** → 3.3 kΩ → **GND**
 
-Resistors are not polarized — either orientation works.
+Widerstände sind unpolarisiert, die Einbaurichtung ist egal.
 
-#### DMX IN — XLR-3 to MAX485
+#### DMX IN — XLR-3 zu MAX485
 - XLR **Pin 1** → **GND**
 - XLR **Pin 2 (Data−)** → MAX485 **B**
 - XLR **Pin 3 (Data+)** → MAX485 **A**
 
-If DMX is not received, swap A and B.
+Falls kein DMX empfangen wird: A und B tauschen.
 
-### Receiver Box — Wireless to DMX OUT
+<a id="receiver-box--wireless-to-dmx-out"></a>
+### Empfängerbox — Wireless zu DMX OUT
 
-This box receives wireless frames from the sender ESP32, then drives the MAX485 in **transmit mode** to output DMX on a male XLR-3 connector.
+Der Empfänger bekommt Funkframes vom Sender-ESP32 und gibt daraus DMX über eine XLR-3-Steckerseite aus.
 
-#### Complete receiver wiring map (pin-by-pin)
+#### Komplette Empfänger-Verdrahtung (Pin für Pin)
 
-| Receiver side | Connect to |
+| Empfänger-Seite | Verbinden mit |
 |---------------|------------|
 | ESP32 `VIN` | MAX485 `VCC` |
 | ESP32 `GND` | MAX485 `GND` |
 | ESP32 `TX2` (GPIO17) | MAX485 `DI` |
 | ESP32 `3V3` | MAX485 `DE` |
 | ESP32 `3V3` | MAX485 `RE` |
-| XLR male pin 1 | ESP32 `GND` and MAX485 bus ground |
-| XLR male pin 2 (Data−) | MAX485 `B` |
-| XLR male pin 3 (Data+) | MAX485 `A` |
+| XLR male Pin 1 | ESP32 `GND` und MAX485 Bus-Masse |
+| XLR male Pin 2 (Data−) | MAX485 `B` |
+| XLR male Pin 3 (Data+) | MAX485 `A` |
 
-#### UART settings
+#### UART-Einstellungen
 
-Same as sender: **250 000 8N2**.
+Wie beim Sender: **250 000 8N2**.
 
-#### Power
+#### Versorgung
 - MAX485 **VCC** → ESP32 **VIN (5 V)**
 - MAX485 **GND** → ESP32 **GND**
 
-#### Mode pins (transmit mode — driver enabled, receiver disabled)
+#### Modus-Pins (Sendemodus: Treiber an, Empfänger aus)
 - MAX485 **DE** → ESP32 **3V3**
 - MAX485 **RE** → ESP32 **3V3**
 
-You can tie **DE and RE together** and run a single wire to **3V3**.
+Du kannst **DE** und **RE** verbinden und gemeinsam auf **3V3** legen.
 
-#### Data
+#### Datenleitung
 - ESP32 **TX2 (GPIO17)** → MAX485 **DI**
 
-No level shifting needed here — the 3.3 V TX2 signal is safe for the MAX485 DI input.
+Keine Pegelanpassung nötig: 3.3 V von TX2 sind für MAX485 DI passend.
 
-#### DMX OUT — XLR-3 to MAX485
+#### DMX OUT — XLR-3 zu MAX485
 - XLR **Pin 1** → **GND**
 - XLR **Pin 2 (Data−)** → MAX485 **B**
 - XLR **Pin 3 (Data+)** → MAX485 **A**
 
-### Termination, Decoupling, and Protection
+<a id="termination-decoupling-and-protection"></a>
+### Abschluss, Entkopplung und Schutz
 
-#### Termination resistor (recommended, receiver only)
-Add **120 Ω across A and B** at the end of the DMX line. On the receiver DMX OUT box, make this **switchable** (ON/OFF jumper or SPDT switch), because you should only terminate if this box is the **last device** on that DMX cable run.
+#### Abschlusswiderstand (empfohlen, nur Empfänger)
+Setze **120 Ω zwischen A und B** am Leitungsende. Beim DMX-OUT-Empfänger am besten schaltbar (Jumper oder Schalter), weil nur das **letzte Gerät** in der Linie terminiert werden soll.
 
-#### Decoupling capacitors (both boxes)
-Place near each MAX485 module, across **VCC** and **GND**:
+#### Entkopplungskondensatoren (beide Boxen)
+Direkt nahe am MAX485 zwischen **VCC** und **GND** platzieren:
 
-- **0.1 µF (100 nF) ceramic** capacitor: either leg to 5 V, other leg to GND
-- **10 µF electrolytic** capacitor: **+** leg to 5 V (VCC), **−** leg to GND (look for the stripe marking the negative leg)
+- **0.1 µF (100 nF) Keramik**: ein Bein an 5 V, das andere an GND
+- **10 µF Elektrolyt**: **+** an 5 V (VCC), **−** an GND (Markierung beachten)
 
-Both capacitors go **in parallel** between VCC and GND. They reduce power-supply noise and prevent resets.
+Beide Kondensatoren liegen **parallel** zwischen VCC und GND. Das reduziert Versorgungsrauschen und verhindert Resets.
 
-#### Optional series resistors
-To reduce ringing on longer cable runs, add **33–68 Ω** in series with each of the **A** and **B** lines, close to the screw terminal.
+#### Optionale Serienwiderstände
+Bei längeren Leitungen helfen **33–68 Ω** in Serie zu **A** und **B**, möglichst nahe an der Schraubklemme.
 
-#### Optional TVS diode
-For hot-plug robustness and ESD protection, add an RS-485 TVS diode array across the **A** and **B** lines.
+#### Optionale TVS-Diode
+Für bessere ESD-/Hotplug-Festigkeit kann ein RS-485-TVS-Diodenarray zwischen **A** und **B** eingesetzt werden.
 
-### Fully Functional Wireless Code (Arduino)
+<a id="fully-functional-wireless-code-arduino"></a>
+### Voll funktionsfähiger Wireless-Code (Arduino)
 
-Use these complete examples:
+Nutze diese vollständigen Beispiele:
 
-- **Transmitter (DMX IN → ESP-NOW):**  
+- **Sender (DMX IN → ESP-NOW):**  
   [`examples/Arduino_WirelessDMXSender/Arduino_WirelessDMXSender.ino`](examples/Arduino_WirelessDMXSender/Arduino_WirelessDMXSender.ino)
-- **Receiver (ESP-NOW → DMX OUT):**  
+- **Empfänger (ESP-NOW → DMX OUT):**  
   [`examples/Arduino_WirelessDMXReceiver/Arduino_WirelessDMXReceiver.ino`](examples/Arduino_WirelessDMXReceiver/Arduino_WirelessDMXReceiver.ino)
 
-Setup notes:
-- Set both sketches to the same `ESPNOW_CHANNEL`.
-- Copy the receiver board MAC address into `RECEIVER_MAC` in the sender sketch.
-- Keep UART wiring at **250000 8N2** as described above.
-- Upload the receiver sketch first, then the sender.
+Wichtige Setup-Hinweise:
+- Beide Sketches müssen denselben `ESPNOW_CHANNEL` verwenden.
+- Die MAC-Adresse des Empfänger-Boards in `RECEIVER_MAC` im Sender-Sketch eintragen.
+- UART-Verdrahtung auf **250000 8N2** belassen.
+- Erst Empfänger-Sketch, dann Sender-Sketch flashen.
 
-### Isolation Note
+<a id="isolation-note"></a>
+### Hinweis zur Isolation
 
-Electrical insulating tape prevents short circuits but **is not galvanic isolation**. ANSI-ESTA E1.11 DMX512-A requires devices to be electrically isolated from the DMX bus.
+Isolierband schützt vor Kurzschluss, ist aber **keine galvanische Isolation**. ANSI-ESTA E1.11 DMX512-A fordert eine galvanische Trennung zum DMX-Bus.
 
-For stage/production use, add:
-- A digital isolator (e.g. ISO7221) or optocouplers on the UART lines, **and**
-- An isolated DC-DC converter for the RS-485 side, **or**
-- Use an all-in-one isolated RS-485 transceiver module.
+Für Bühne/Produktion:
+- Digitalisolator (z. B. ISO7221) oder Optokoppler auf den UART-Leitungen, **und**
+- Isolierter DC-DC-Wandler für die RS-485-Seite, **oder**
+- Ein vollständig isoliertes RS-485-Transceiver-Modul verwenden.
 
-## To Do
+<a id="to-do"></a>
+## Aufgabenliste
 
-For a list of planned features, see the [esp_dmx GitHub Projects](https://github.com/users/someweisguy/projects/5) page.
+Eine Liste geplanter Funktionen findest du auf der Seite [esp_dmx GitHub Projects](https://github.com/users/someweisguy/projects/5).
 
-## Appendix
+<a id="appendix"></a>
+## Anhang
 
-### Command Classes
+<a id="command-classes"></a>
+### Befehlsklassen
 
-The command class specifies the action of the RDM message. Responders shall always generate a response to `RDM_CC_GET_COMMAND` and `RDM_CC_SET_COMMAND` messages except when the destination UID of the message is a broadcast address. Responders shall not respond to commands sent using broadcast addressing, in order to prevent collisions.
+Die Befehlsklasse legt die Aktion der RDM-Nachricht fest. Responder müssen immer auf `RDM_CC_GET_COMMAND`- und `RDM_CC_SET_COMMAND`-Nachrichten antworten, außer wenn die Ziel-UID eine Broadcast-Adresse ist. Auf per Broadcast adressierte Befehle sollen Responder nicht antworten, um Kollisionen zu vermeiden.
 
-- `RDM_CC_DISC_COMMAND` The packet is an RDM discovery command.
-- `RDM_CC_DISC_COMMAND_RESPONSE` The packet is a response to an RDM discovery command.
-- `RDM_CC_GET_COMMAND` The packet is an RDM GET request.
-- `RDM_CC_GET_COMMAND_RESPONSE` The packet is a response to an RDM GET request.
-- `RDM_CC_SET_COMMAND` The packet is an RDM SET request.
-- `RDM_CC_SET_COMMAND_RESPONSE` The packet is a response to an RDM SET request.
+- `RDM_CC_DISC_COMMAND` Das Paket ist ein RDM-Discovery-Befehl.
+- `RDM_CC_DISC_COMMAND_RESPONSE` Das Paket ist eine Antwort auf einen RDM-Discovery-Befehl.
+- `RDM_CC_GET_COMMAND` Das Paket ist eine RDM-GET-Anfrage.
+- `RDM_CC_GET_COMMAND_RESPONSE` Das Paket ist eine Antwort auf eine RDM-GET-Anfrage.
+- `RDM_CC_SET_COMMAND` Das Paket ist eine RDM-SET-Anfrage.
+- `RDM_CC_SET_COMMAND_RESPONSE` Das Paket ist eine Antwort auf eine RDM-SET-Anfrage.
 
-### NACK Reason Codes
+<a id="nack-reason-codes"></a>
+### NACK-Grundcodes
 
-The NACK reason defines the reason that the responder is unable to comply with the request.
+Der NACK-Grund beschreibt, warum der Responder die Anfrage nicht ausführen kann.
 
-- `RDM_NR_UNKNOWN_PID` The responder cannot comply with the request because the message is not implemented in the responder.
-- `RDM_NR_FORMAT_ERROR` The responder cannot interpret the request as the controller data was not formatted correctly.
-- `RDM_NR_HARDWARE_FAULT` The responder cannot comply due to an internal hardware fault.
-- `RDM_NR_PROXY_REJECT` Proxy is not the RDM line master and cannot comply with the message.
-- `RDM_NR_WRITE_PROTECT` Set command normally allowed but being blocked currently.
-- `RDM_NR_UNSUPPORTED_COMMAND_CLASS` Not valid for command class attempted. May be used where get allowed but set is not supported.
-- `RDM_NR_DATA_OUT_OF_RANGE` Value for given parameter out of allowable range or not supported.
-- `RDM_NR_BUFFER_FULL` Buffer or queue space currently has no free space to store data.
-- `RDM_NR_PACKET_SIZE_UNSUPPORTED` Incoming message exceeds buffer capacity.
-- `RDM_NR_SUB_DEVICE_OUT_OF_RANGE` Sub-device is out of range or unknown.
-- `RDM_NR_PROXY_BUFFER_FULL` The proxy buffer is full and cannot store any more queued message or status message responses.
+- `RDM_NR_UNKNOWN_PID` Der Responder kann die Anfrage nicht erfüllen, weil diese Nachricht im Responder nicht implementiert ist.
+- `RDM_NR_FORMAT_ERROR` Der Responder kann die Anfrage nicht interpretieren, da die Controller-Daten nicht korrekt formatiert sind.
+- `RDM_NR_HARDWARE_FAULT` Der Responder kann die Anfrage wegen eines internen Hardwarefehlers nicht erfüllen.
+- `RDM_NR_PROXY_REJECT` Der Proxy ist nicht der RDM-Line-Master und kann die Nachricht nicht erfüllen.
+- `RDM_NR_WRITE_PROTECT` SET-Befehl ist grundsätzlich erlaubt, aktuell aber blockiert.
+- `RDM_NR_UNSUPPORTED_COMMAND_CLASS` Für die angeforderte Befehlsklasse ungültig. Kann verwendet werden, wenn GET erlaubt ist, SET aber nicht unterstützt wird.
+- `RDM_NR_DATA_OUT_OF_RANGE` Wert für den angegebenen Parameter liegt außerhalb des zulässigen Bereichs oder wird nicht unterstützt.
+- `RDM_NR_BUFFER_FULL` Im Buffer bzw. in der Queue ist aktuell kein freier Speicher für Daten vorhanden.
+- `RDM_NR_PACKET_SIZE_UNSUPPORTED` Eingehende Nachricht überschreitet die Buffer-Kapazität.
+- `RDM_NR_SUB_DEVICE_OUT_OF_RANGE` Subgerät liegt außerhalb des zulässigen Bereichs oder ist unbekannt.
+- `RDM_NR_PROXY_BUFFER_FULL` Der Proxy-Buffer ist voll und kann keine weiteren Queue- oder Statusmeldungsantworten speichern.
 
-### Parameter IDs
+<a id="parameter-ids"></a>
+### Parameter-IDs
 
-The table below lists the Parameter IDs specified by the RDM standard. Parameters which support GET or SET are indicated accordingly. Required parameters are automatically registered by the DMX driver if there is enough parameter space on the DMX driver. PIDs which are currently supported by this library are indicated in the "supported" column by the earliest version of this library which supports the PID.
+Die folgende Tabelle listet die im RDM-Standard definierten Parameter-IDs auf. Parameter mit GET- oder SET-Unterstützung sind entsprechend markiert. Erforderliche Parameter werden vom DMX-Treiber automatisch registriert, sofern ausreichend Parameterspeicher vorhanden ist. Aktuell von dieser Bibliothek unterstützte PIDs sind in der Spalte "Unterstützt" mit der frühesten unterstützenden Bibliotheksversion angegeben.
 
-Parameter                                   | GET | SET |Supported|Notes|
+Parameter                                   | GET | SET |Unterstützt|Hinweise|
 :-------------------------------------------|:---:|:---:|:-------:|:----|
-`RDM_PID_DISC_UNIQUE_BRANCH`                | | |v3.1.0|Must be broadcast to all devices. Must be sent to the root sub-device.|
-`RDM_PID_DISC_MUTE`                         | | |v3.1.0|Must be sent to the root sub-device.|
-`RDM_PID_DISC_UN_MUTE`                      | | |v3.1.0|Must be sent to the root sub-device.|
-`RDM_PID_PROXIED_DEVICES`                   |✔️| |      |Must be sent to the root sub-device.|
-`RDM_PID_PROXIED_DEVICE_COUNT`              |✔️| |      |Must be sent to the root sub-device.|
-`RDM_PID_COMMS_STATUS`                      |✔️|✔️|      |Must be sent to the root sub-device.|
-`RDM_PID_QUEUED_MESSAGE`                    |✔️| |v4.0.0|Must be sent to the root sub-device.|
-`RDM_PID_STATUS_MESSAGE`                    |✔️| |      |Must be sent to the root sub-device.|
-`RDM_PID_STATUS_ID_DESCRIPTION`             |✔️| |      |Must be sent to the root sub-device.|
+`RDM_PID_DISC_UNIQUE_BRANCH`                | | |v3.1.0|Muss an alle Geräte gebroadcastet werden. Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_DISC_MUTE`                         | | |v3.1.0|Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_DISC_UN_MUTE`                      | | |v3.1.0|Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_PROXIED_DEVICES`                   |✔️| |      |Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_PROXIED_DEVICE_COUNT`              |✔️| |      |Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_COMMS_STATUS`                      |✔️|✔️|      |Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_QUEUED_MESSAGE`                    |✔️| |v4.0.0|Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_STATUS_MESSAGE`                    |✔️| |      |Muss an das Root-Subgerät gesendet werden.|
+`RDM_PID_STATUS_ID_DESCRIPTION`             |✔️| |      |Muss an das Root-Subgerät gesendet werden.|
 `RDM_PID_CLEAR_STATUS_ID`                   | |✔️|      | |
-`RDM_PID_SUB_DEVICE_STATUS_REPORT_THRESHOLD`|✔️|✔️|      |Must **not** be sent to the root sub-device.|
-`RDM_PID_SUPPORTED_PARAMETERS`              |✔️| |v4.0.0|Support required only if supporting parameters beyond the minimum required set.|
-`RDM_PID_PARAMETER_DESCRIPTION`             |✔️| |v4.0.0|Must be sent to the root sub-device. Support required for manufacturer-specific PIDs exposed in `RDM_PID_SUPPORTED_PARAMETERS`.|
+`RDM_PID_SUB_DEVICE_STATUS_REPORT_THRESHOLD`|✔️|✔️|      |Darf **nicht** an das Root-Subgerät gesendet werden.|
+`RDM_PID_SUPPORTED_PARAMETERS`              |✔️| |v4.0.0|Nur erforderlich, wenn Parameter über den minimal erforderlichen Satz hinaus unterstützt werden.|
+`RDM_PID_PARAMETER_DESCRIPTION`             |✔️| |v4.0.0|Muss an das Root-Subgerät gesendet werden. Unterstützung erforderlich für herstellerspezifische PIDs in `RDM_PID_SUPPORTED_PARAMETERS`.|
 `RDM_PID_DEVICE_INFO`                       |✔️| |v3.1.0| |
 `RDM_PID_PRODUCT_DETAIL_ID_LIST`            |✔️| |      | |
 `RDM_PID_DEVICE_MODEL_DESCRIPTION`          |✔️| |v4.1.0| |
@@ -1176,14 +1225,14 @@ Parameter                                   | GET | SET |Supported|Notes|
 `RDM_PID_BOOT_SOFTWARE_VERSION_LABEL`       |✔️| |      | |
 `RDM_PID_DMX_PERSONALITY`                   |✔️|✔️|      | |
 `RDM_PID_DMX_PERSONALITY_DESCRIPTION`       |✔️| |      | |
-`RDM_PID_DMX_START_ADDRESS`                 |✔️|✔️|v3.1.0|Support required if device uses a DMX slot.|
+`RDM_PID_DMX_START_ADDRESS`                 |✔️|✔️|v3.1.0|Erforderlich, wenn das Gerät einen DMX-Slot verwendet.|
 `RDM_PID_SLOT_INFO`                         |✔️| |      | |
 `RDM_PID_SLOT_DESCRIPTION`                  |✔️| |      | |
 `RDM_PID_DEFAULT_SLOT_VALUE`                |✔️| |      | |
 `RDM_PID_SENSOR_DEFINITION`                 |✔️| |v4.1.0| |
 `RDM_PID_SENSOR_VALUE`                      |✔️|✔️|v4.0.0| |
 `RDM_PID_RECORD_SENSORS`                    | |✔️|v4.0.0| |
-`RDM_PID_DEVICE_HOURS`                      |✔️|✔️|v4.1.0|Some devices may not support RDM SET requests. Support for SET may be disabled using the ESP-IDF Kconfig.|
+`RDM_PID_DEVICE_HOURS`                      |✔️|✔️|v4.1.0|Manche Geräte unterstützen evtl. keine RDM-SET-Anfragen. SET-Unterstützung kann über ESP-IDF-Kconfig deaktiviert sein.|
 `RDM_PID_LAMP_HOURS`                        |✔️|✔️|v4.1.0| |
 `RDM_PID_LAMP_STRIKES`                      |✔️|✔️|      | |
 `RDM_PID_LAMP_STATE`                        |✔️|✔️|      | |
@@ -1203,32 +1252,34 @@ Parameter                                   | GET | SET |Supported|Notes|
 `RDM_PID_CAPTURE_PRESET`                    | |✔️|      | |
 `RDM_PID_PRESET_PLAYBACK`                   |✔️|✔️|      | |
 
-### Product Categories
+<a id="product-categories"></a>
+### Produktkategorien
 
-Devices shall report a product category based on the product's primary function.
+Geräte sollen eine Produktkategorie entsprechend der primären Funktion des Produkts melden.
 
-- `RDM_PRODUCT_CATEGORY_NOT_DECLARED` The product category is not declared.
-- `RDM_PRODUCT_CATEGORY_FIXTURE` The product is a fixture intended to create illumination.
-- `RDM_PRODUCT_CATEGORY_FIXTURE_ACCESSORY` The product is an add-on to a fixture or projector.
-- `RDM_PRODUCT_CATEGORY_PROJECTOR`The product is a light source capable of producing realistic images from another media.
-- `RDM_PRODUCT_CATEGORY_ATMOSPHERIC` The product creates atmospheric effects such as haze, fog, or pyrotechnics.
-- `RDM_PRODUCT_CATEGORY_DIMMER` The product is for intensity control, specifically dimming equipment.
-- `RDM_PRODUCT_CATEGORY_POWER` The product is for power control, other than dimming equipment.
-- `RDM_PRODUCT_CATEGORY_SCENIC` The product is a scenic device unrelated to lighting equipment.
-- `RDM_PRODUCT_CATEGORY_DATA` The product is a DMX converter, interface, or otherwise part of DMX infrastructure.
-- `RDM_PRODUCT_CATEGORY_AV` The product is audio-visual equipment.
-- `RDM_PRODUCT_CATEGORY_MONITOR` The product is monitoring equipment.
-- `RDM_PRODUCT_CATEGORY_CONTROL` The product is a controller or backup device.
-- `RDM_PRODUCT_CATEGORY_TEST` The product is test equipment.
-- `RDM_PRODUCT_CATEGORY_OTHER` The product isn't described by any of the other product categories.
+- `RDM_PRODUCT_CATEGORY_NOT_DECLARED` Die Produktkategorie ist nicht deklariert.
+- `RDM_PRODUCT_CATEGORY_FIXTURE` Das Produkt ist ein Leuchtmittel/Fixture zur Erzeugung von Beleuchtung.
+- `RDM_PRODUCT_CATEGORY_FIXTURE_ACCESSORY` Das Produkt ist ein Zubehörteil für ein Fixture oder einen Projektor.
+- `RDM_PRODUCT_CATEGORY_PROJECTOR` Das Produkt ist eine Lichtquelle, die realistische Bilder aus einem anderen Medium erzeugen kann.
+- `RDM_PRODUCT_CATEGORY_ATMOSPHERIC` Das Produkt erzeugt atmosphärische Effekte wie Haze, Nebel oder Pyrotechnik.
+- `RDM_PRODUCT_CATEGORY_DIMMER` Das Produkt dient der Intensitätssteuerung, insbesondere Dimmtechnik.
+- `RDM_PRODUCT_CATEGORY_POWER` Das Produkt dient der Leistungs-/Stromsteuerung außerhalb von Dimmtechnik.
+- `RDM_PRODUCT_CATEGORY_SCENIC` Das Produkt ist ein szenisches Gerät ohne direkten Bezug zur Lichttechnik.
+- `RDM_PRODUCT_CATEGORY_DATA` Das Produkt ist ein DMX-Konverter, Interface oder sonstiger Teil der DMX-Infrastruktur.
+- `RDM_PRODUCT_CATEGORY_AV` Das Produkt ist Audio-/Video-Equipment.
+- `RDM_PRODUCT_CATEGORY_MONITOR` Das Produkt ist Überwachungsequipment.
+- `RDM_PRODUCT_CATEGORY_CONTROL` Das Produkt ist ein Controller- oder Backup-Gerät.
+- `RDM_PRODUCT_CATEGORY_TEST` Das Produkt ist Testequipment.
+- `RDM_PRODUCT_CATEGORY_OTHER` Das Produkt wird durch keine der anderen Produktkategorien beschrieben.
 
-### Response Types
+<a id="response-types"></a>
+### Antworttypen
 
-Responding devices shall respond to requests only if the request was a non-broadcast request. Responding devices may respond to requests with the following response types:
+Antwortende Geräte sollen nur auf Anfragen reagieren, wenn es sich nicht um Broadcast-Anfragen handelt. Antwortende Geräte können mit folgenden Antworttypen reagieren:
 
-- `RDM_RESPONSE_TYPE_ACK` indicates that the responder has correctly received the controller message and is acting upon the request.
-- `RDM_RESPONSE_TYPE_ACK_OVERFLOW` indicates that the responder has correctly received the controller message and is acting upon the request, but there is more response data available than will fit in a single response packet. To receive the remaining information, controllers are able to send repeated requests to the same PID until the remaining information can fit in a single message.
-- `RDM_RESPONSE_TYPE_ACK_TIMER` indicates that the responder is unable to supply the requested GET information or SET confirmation within the required response time. When sending this response, responding devices include an estimated response time that must elapse before the responder can provide the required information.
-- `RDM_RESPONSE_TYPE_NACK_REASON` indicates that the responder is unable to reply with the requested GET information or unable to process the specified SET command. Responding devices must include a NACK reason code in their response. NACK reason codes are enumerated in the [appendix](#nack-reason-codes).
-- `RDM_RESPONSE_TYPE_NONE` indicates that no response was received.
-- `RDM_RESPONSE_TYPE_INVALID` indicates that a response was received, but the response was invalid. This can occur for several reasons including an invalid checksum, or an invalid packet format.
+- `RDM_RESPONSE_TYPE_ACK` zeigt an, dass der Responder die Controller-Nachricht korrekt empfangen hat und die Anfrage verarbeitet.
+- `RDM_RESPONSE_TYPE_ACK_OVERFLOW` zeigt an, dass der Responder die Anfrage verarbeitet, aber mehr Antwortdaten vorliegen, als in ein einzelnes Antwortpaket passen. Um die restlichen Informationen zu erhalten, kann der Controller wiederholt dieselbe PID anfragen, bis alles in eine einzelne Nachricht passt.
+- `RDM_RESPONSE_TYPE_ACK_TIMER` zeigt an, dass der Responder die angeforderten GET-Informationen oder SET-Bestätigung nicht innerhalb der geforderten Antwortzeit liefern kann. In dieser Antwort gibt das Gerät eine geschätzte Wartezeit an, nach der die benötigte Information bereitsteht.
+- `RDM_RESPONSE_TYPE_NACK_REASON` zeigt an, dass der Responder die angeforderten GET-Informationen nicht liefern oder den angegebenen SET-Befehl nicht verarbeiten kann. Die Antwort muss einen NACK-Grundcode enthalten. NACK-Grundcodes sind im [Anhang](#nack-reason-codes) aufgeführt.
+- `RDM_RESPONSE_TYPE_NONE` zeigt an, dass keine Antwort empfangen wurde.
+- `RDM_RESPONSE_TYPE_INVALID` zeigt an, dass eine Antwort empfangen wurde, diese aber ungültig war. Das kann z. B. durch eine ungültige Prüfsumme oder ein ungültiges Paketformat auftreten.
